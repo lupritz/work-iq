@@ -105,7 +105,15 @@ test('Business Applications discovery and inventory contracts stay aligned', () 
     assert.match(business, /fetch[\s\S]{0,80}\/businessapps\/environments\//i);
     assert.match(business, /discovery is read-only[\s\S]{0,100}search_paths[\s\S]{0,80}not `?do_action`?/i);
     assert.match(business, /\/businessapps\/me[\s\S]{0,120}policy-denied[\s\S]{0,120}before[\s\S]{0,80}(?:grounded path|search_paths|fetch)/i);
-    assert.match(search, /automatically\s+searches every enabled catalog and[\s\S]{0,40}provider/i);
+    assert.match(search, /one focused (?:`?search_paths`? )?(?:discovery )?call/i);
+    assert.match(search, /only returned paths prove[\s\S]{0,60}(?:provider )?participat/i);
+    assert.match(search, /no `?\/businessapps\/[^`]*`?[\s\S]{0,20}path[\s\S]{0,120}do not repeat/i);
+    assert.match(search, /fetch `?\/businessapps\/environments\//i);
+    assert.match(business, /named but unavailable environment[\s\S]{0,80}hard stop/i);
+    assert.match(business, /write receipt[\s\S]{0,100}read-back/i);
+    assert.match(business, /pre-existing lookalike[\s\S]{0,40}not proof/i);
+    assert.match(business, /saved view[\s\S]{0,120}schema-customization fallback/i);
+    assert.doesNotMatch(business, /\/applications\//i);
     assert.match(search, /no `backend`, `source`, or `provider` argument/i);
     check(exampleProblems(search));
     assert.match(action, /Business Applications/i);

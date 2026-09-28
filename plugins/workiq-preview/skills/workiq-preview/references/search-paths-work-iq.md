@@ -6,17 +6,14 @@ preflight. This tool does not discover MCP tool names; use the connected catalog
 
 ## Live argument contract
 
-The connected catalog inspected for this guidance exposes required `query`
-(string): a natural-language resource/action description or a path prefix.
-Older catalogs may expose a regex `filter` instead. Inspect the actual advertised
-schema and send only its accepted fields; do not translate examples into guessed
-arguments or try both interfaces after rejection.
+The connected WorkIQ catalog exposes natural-language and structural discovery.
+Inspect its advertised schema and send only accepted fields; do not translate
+examples into guessed arguments or try another interface after rejection.
 
-There is no `backend`, `source`, or `provider` argument. WorkIQ automatically
-searches every enabled catalog and provider available to the current tenant and
-caller. Path discovery is not Graph-only: retain exact returned resource
-families and their domain contracts, and do not claim an unavailable provider
-is enabled.
+There is no `backend`, `source`, or `provider` argument. WorkIQ may fan out to
+enabled providers, but only returned paths prove participation. Require a
+returned `/businessapps/...` path before following a Business Applications
+result.
 
 ## Workflow
 
@@ -30,6 +27,11 @@ is enabled.
 Use [recovery](troubleshooting.md) for failures. Explicit denial stops; no route,
 agent, or tool substitution. An empty result means no matching path was confirmed
 in that search, not that the entire service lacks the capability.
+
+If Business Applications discovery errors or returns no `/businessapps/...`
+path, do not repeat or broaden it. Fetch `/businessapps/environments/`, resolve
+only the exact requested environment, and inspect only its relevant returned
+collection. Abstain when the exact environment or capability is absent.
 
 When asked for all available matching paths, summarize every returned family and
 operation, not just common examples. Inspect an available saved capped result

@@ -10,20 +10,29 @@ path is unknown.
 | `filter` | string | When named in `inputSchema.required` | Legacy regex/path-keyword search. Business Applications also accepts natural-language discovery through this parameter. |
 | `query` | string | When named in `inputSchema.required` | Natural-language description of the resource or action to discover. |
 
-Inspect the current tool schema and send exactly the parameter listed in `inputSchema.required`: `filter` or `query`.
-Never send both. The visible schema can vary by caller or rollout, so do not hard-code one form.
+Inspect the connected WorkIQ tool schema and send only accepted fields. Never
+send both `filter` and `query`, and never retry with a different argument after
+rejection.
 
-There is no `backend`, `source`, or `provider` argument. WorkIQ automatically searches every enabled catalog and
-provider available to the current tenant and caller, including Business Applications when enabled. Do not invent a
-catalog selector or claim that an absent provider is available.
+There is no `backend`, `source`, or `provider` argument. WorkIQ may fan out to
+enabled providers, but only returned paths prove that a provider participated.
+For Business Applications, require a returned `/businessapps/...` path before
+following it.
 
 ## Workflow
 
-1. `search_paths` with the required `filter` or `query` input to find candidate paths
+1. Make one focused `search_paths` call with an accepted `filter` or `query`
+   input to find candidate paths.
 2. `get_schema` on the chosen path
 3. `fetch` or the appropriate write tool (`create_entity` / `update_entity` / `delete_entity` / `do_action` / `call_function`)
 
 If the user asks to discover paths AND read or mutate, continue to the mutation tool after picking the path — discovery alone is incomplete.
+
+If Business Applications discovery errors or returns no `/businessapps/...`
+path, do not repeat or broaden it. Fetch `/businessapps/environments/`, resolve
+only the exact requested environment, and inspect only its relevant returned
+`apps`, `skills`, or `tables` collection. Abstain when the exact environment or
+capability is absent.
 
 Never answer API/path questions from general Graph knowledge, local SQL, filesystem search, or built-in tools. Summarize paths from `search_paths`; if none matched, say WorkIQ did not confirm one.
 

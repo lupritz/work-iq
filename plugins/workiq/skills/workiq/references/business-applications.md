@@ -6,19 +6,21 @@ substitute a separate endpoint, another MCP server, or an invented REST URL.
 
 ## Discovery and path grounding
 
-1. Start intent-driven discovery with `search_paths` and a natural-language description of the business record,
-   workflow, app, or operation. Use the search parameter named in the current tool schema's `required` array:
-   `query` or `filter`. Pass the natural-language description through that one required parameter and never send
-   both. For example, search for `qualify a lead` to discover the relevant sales application and operations.
+1. Start intent-driven discovery with one focused `search_paths` call and a natural-language description of the
+   business record, workflow, app, or operation. Use only fields accepted by the connected WorkIQ tool schema.
+   Treat discovery as grounded only when the response contains a `/businessapps/...` path.
 2. Use `fetch` on `/businessapps/environments/` when the user explicitly asks to list environments or identify the
    default environment. Do not guess an environment ID.
-3. Discovery is read-only: use `search_paths`, not `do_action`. `do_action` is a POST action and may be denied based
+3. If `search_paths` errors or returns no `/businessapps/...` path, do not repeat or broaden the search. Use the
+   environment inventory, select only the exact requested environment, and inspect only the relevant returned
+   `apps`, `skills`, or `tables` collection. If the environment or capability is absent, abstain.
+4. Discovery is read-only: use `search_paths`, not `do_action`. `do_action` is a POST action and may be denied based
    on the calling client's trust classification and the tenant's effective mutation policy. Returned paths can be
    passed directly to `fetch`, `get_schema`, or a write tool.
-4. For an unknown path or identifier, discover the Business Applications resource this way — apps, tables, records,
+5. For an unknown path or identifier, discover the Business Applications resource this way — apps, tables, records,
    skills, APIs, and operations. Take each identifier from the returned paths. Do not guess an ID or name. Known
    structural inventory is the exception: use its direct `fetch` path, especially `/businessapps/environments/`.
-5. Use `get_schema` on the returned concrete path before an unfamiliar mutation or operation. Never fill in
+6. Use `get_schema` on the returned concrete path before an unfamiliar mutation or operation. Never fill in
    `{environmentId}`, `{tableName}`, `{recordId}`, `{appName}`, `{apiName}`, `{skillName}`, or operation names
    from memory.
 
@@ -92,13 +94,19 @@ diagnostic says so, and do not retry through another path.
   confirmation.
 - When prior transcript context records an explicit approval, perform only the
   approved mutation, once, through the schema-defined path.
+- A named but unavailable environment is a hard stop. Never redirect the request
+  to a default, similarly named, or otherwise available environment.
+- An approved create or update is complete only when the current turn contains
+  the matching write receipt and, when supported, a read-back of that exact
+  target. A pre-existing lookalike is not proof of completion.
 - If the approved operation fails for a missing privilege, authorization, or
   policy, **stop the mutation workflow immediately** and report that exact
   failure. Do not continue searching for another write route. Do not modify a
   different table, record, view, saved query, skill, or app artifact as a
   workaround and do not claim the requested operation succeeded.
 - Schema and customization requests must use the discovered schema-mutation
-  operation. Record-level access does not imply customization rights.
+  operation. Record-level access does not imply customization rights, and a
+  saved view or ordinary record update is not a schema-customization fallback.
 
 ## When to use `execute-work`
 

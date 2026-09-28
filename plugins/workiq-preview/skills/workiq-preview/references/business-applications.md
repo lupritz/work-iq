@@ -9,14 +9,18 @@ registrations. Do not substitute another MCP server or invent REST paths.
 
 1. For an unknown record, workflow, app, skill, API, operation, or identifier,
    call `search_paths` once with a focused natural-language description. Use the
-   required `query` or legacy `filter` advertised by the live schema and send
-   only accepted fields. Never try both interfaces after rejection.
+   fields accepted by the connected WorkIQ schema. Treat discovery as grounded
+   only when the response contains a `/businessapps/...` path.
 2. For environment inventory, skip discovery and call `fetch` directly on
    `/businessapps/environments/`. Use the exact returned environment IDs; never
    assume a default environment.
-3. Follow exact returned paths with `fetch`, `get_schema`, or the effect-correct
+3. If discovery errors or returns no `/businessapps/...` path, do not repeat or
+   broaden it. Use the environment inventory, select only the exact requested
+   environment, and inspect only its relevant returned collection. Abstain when
+   the exact environment or capability is absent.
+4. Follow exact returned paths with `fetch`, `get_schema`, or the effect-correct
    write/action tool. Do not guess path segments, IDs, names, or casing.
-4. Before an unfamiliar write or action, call `get_schema` on the concrete
+5. Before an unfamiliar write or action, call `get_schema` on the concrete
    path with the matching operation type. Schema availability does not grant
    authorization.
 
@@ -68,6 +72,11 @@ permitted structural `fetch` into mutations. On an explicit denial:
 - do not assert that a particular tenant setting or consent change will fix it
   unless the diagnostic says so; and
 - do not claim success or substitute a different record, table, skill, or app.
+
+A named but unavailable environment is a hard stop. An approved create or
+update requires a matching write receipt and, when supported, read-back of that
+exact target; a pre-existing lookalike is not proof of completion. Never use a
+saved view or ordinary record update as a schema-customization fallback.
 
 When the outcome of a mutation is ambiguous, do not replay it. Reconcile with a
 supported safe read when available; otherwise report **outcome unknown**.

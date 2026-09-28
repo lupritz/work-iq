@@ -547,10 +547,12 @@ structured operational data and workflows, such as customer and sales records in
 records in ERP, and line-of-business data in Power Apps. Route intent tied to records or workflows in a business
 system to `/businessapps`; use Graph for Microsoft 365 collaboration and directory content such as mail, Teams,
 calendars, files, and people. Read `references/business-applications.md` before handling a Business Applications
-request. Start intent-driven discovery with `search_paths` and a concise natural-language description of the needed
-record, workflow, or app. Use the parameter named in the current tool schema's `required` array (`query` or `filter`);
-never send both. Use the returned paths, environment IDs, and application IDs. For known structural inventory, such
-as listing environments, call `fetch` directly on `/businessapps/environments/`. Do not use `do_action` for
+request. Make one focused `search_paths` call with a concise natural-language description of the needed record,
+workflow, or app, using only fields accepted by the connected WorkIQ tool schema. Use only returned
+`/businessapps/...` paths, environment IDs, and application IDs. If no Business Applications path is returned, do
+not repeat or broaden the search: fetch `/businessapps/environments/`, resolve only the exact requested environment,
+and inspect only its relevant returned collection. For known structural inventory, call `fetch` directly on
+`/businessapps/environments/`. Do not use `do_action` for
 discovery: it is a POST action and may be denied based on the calling client's trust classification and the tenant's
 effective mutation policy.
 Every Business Applications resource — environments, apps, tables, records, skills, and APIs — is discovered with
