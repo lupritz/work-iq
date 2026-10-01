@@ -41,8 +41,6 @@ policy-denied before any grounded path is returned, ending the workflow before
 | Create a record | `create_entity` on `/businessapps/environments/{environmentId}/tables/{tableName}/records` with `{"item":{...}}` |
 | Update a record | `update_entity` on `/businessapps/environments/{environmentId}/tables/{tableName}/records/{recordId}` with changed fields |
 | Delete a record/table | `delete_entity` on the exact record or table path returned by discovery |
-| Upload a Business Applications record file | `do_action` on `/businessapps/environments/{environmentId}/tables/{tableName}/records/{recordId}/files/{columnName}/upload` with the schema-defined file arguments |
-| Download a Business Applications record file | `call_function` on `/businessapps/environments/{environmentId}/tables/{tableName}/records/{recordId}/files/{columnName}/download` with optional `destinationPath` |
 | List or inspect apps | `fetch` `/businessapps/environments/{environmentId}/apps[/<appName>]` |
 | List or read a business skill | `fetch` `/businessapps/environments/{environmentId}/skills[/{skillName}]` |
 | Create a business skill | `create_entity` on `/businessapps/environments/{environmentId}/skills` with the schema-defined skill payload |
@@ -56,11 +54,6 @@ policy-denied before any grounded path is returned, ending the workflow before
 Environment SQL queries and Custom APIs with input bodies are actions, not functions. Use `do_action` with the
 schema-defined `jsonBody`. Use `call_function` only for an exact function path returned by discovery; do not use it
 for `/businessapps/environments/{environmentId}/query`.
-
-Business Applications record file operations are distinct from Microsoft Graph binary content and the
-`fetch_blob` / `upload_blob` release status. Do not substitute those Graph blob tools for the
-`/businessapps/.../files/{columnName}/upload` or `/download` routes, and do not generalize these routes to OneDrive,
-SharePoint, mail attachments, or other Graph resources.
 
 ## Business skills
 
