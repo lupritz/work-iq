@@ -4,9 +4,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { retrievalProblems } from './contract.mjs';
 import { root, skillRoot, markdownFiles, parseMarkdown, frontmatterProblems, linkProblems, exampleProblems } from './doc-lint.mjs';
+import { routeText } from './loading-contract.mjs';
 
 const read = (name, file) => fs.readFileSync(path.join(skillRoot(name), file), 'utf8');
 const both = ['workiq', 'workiq-preview'];
+const route = (name, id) => routeText(skillRoot(name), id);
 
 test('A1: current retrieval accepts a string and rejects arrays or blank queries', () => {
   assert.deepEqual(retrievalProblems({ query: 'Synthetic project', strategy: 'grounding' }), []);
@@ -42,10 +44,8 @@ for (const name of both) {
       /suggested wording/i, /no user|absent user/i,
       /comparator/i, /deliberately excluded/i, /these attendees/, /that week/
     ]) assert.match(main, expression);
-    for (const file of ['references/mail-work-iq.md', 'references/do-action-work-iq.md']) {
-      assert.match(read(name, file), /intent|requested effect/i);
-    }
-    assert.match(read(name, 'references/mail-work-iq.md'), /failed `?createReply`?[\s\S]{0,200}fresh/i);
+    for (const id of ['mail-actions', 'teams-actions']) assert.match(route(name, id), /intent|requested effect/i);
+    assert.match(route(name, 'mail-actions'), /failed `?createReply`?[\s\S]{0,200}fresh/i);
   });
   test(`${name}: A5/A6 completeness and diagnostic-driven recovery`, () => {
     const main = read(name, 'SKILL.md');
@@ -59,20 +59,22 @@ for (const name of both) {
     assert.doesNotMatch(recovery, /Cause:\*\* URL formatting|question is too broad|retry the tool call.*sign-in/);
   });
   test(`${name}: T1-T4 Teams ports with safe differences`, () => {
-    const teams = read(name, 'references/teams-work-iq.md') + '\n' +
-      read(name, 'references/do-action-work-iq.md');
-    for (const expression of [
-      /chat.*(?:no replies|flat)/i, /oneOnOne/, /create-or-return/,
-      /read-only[\s\S]{0,100}(?:create|lookup)|(?:create|lookup)[\s\S]{0,100}read-only/i,
-      /topic%20eq/, /userId/, /tenantId/, /no query string/i,
-      /exact marker/i, /supplied.*(?:URLs|paths)/i, /hideForUser/,
-      /lastMessageReadDateTime/, /lastUpdatedDateTime/,
-      /reactionType.*👍/, /setUserPreferredPresence/,
-      /system-generated|read-only resource fields/, /@odata.nextLink/
-    ]) assert.match(teams, expression);
-    assert.doesNotMatch(teams, /messages\?\$select=createdDateTime&\$top=1|reactionType":"like"/);
+    const routeRules = [
+      ['teams-read', [/chat.*(?:no replies|flat)/i, /oneOnOne/, /create-or-return/,
+        /read-only[\s\S]{0,100}(?:create|lookup)|(?:create|lookup)[\s\S]{0,100}read-only/i,
+        /topic%20eq/, /userId/, /tenantId/, /no query string/i, /exact marker/i,
+        /supplied.*(?:URLs|paths)/i, /system-generated|read-only resource fields/, /@odata.nextLink/]],
+      ['teams-actions', [/reactionType.*👍/]],
+      ['teams-state', [/hideForUser/, /lastMessageReadDateTime/, /lastUpdatedDateTime/]],
+      ['teams-presence', [/setUserPreferredPresence/]]
+    ];
+    for (const [id, rules] of routeRules) {
+      const text = route(name, id);
+      for (const expression of rules) assert.match(text, expression, `${name}/${id}`);
+      assert.doesNotMatch(text, /messages\?\$select=createdDateTime&\$top=1|reactionType":"like"/);
+      if (name === 'workiq-preview') assert.doesNotMatch(text, /Use `ask` only for synthesis/);
+    }
     assert.match(read(name, 'references/delete-entity-work-iq.md'), /hideForUser/);
-    if (name === 'workiq-preview') assert.doesNotMatch(teams, /Use `ask` only for synthesis/);
   });
   for (const file of markdownFiles(skillRoot(name))) {
     test(`${name}/${path.relative(skillRoot(name), file)}: local links`, () => {
@@ -86,16 +88,17 @@ test('A6: public metadata workflow never reinterprets access denial as an addres
   assert.match(text, /Explicit.*denial[\s\S]{0,120}stop/i);
 });
 test('A5: public search cap is a page limit, not all-document proof', () => {
-  const text = read('workiq', 'references/sharepoint-work-iq.md');
+  const text = route('workiq', 'sharepoint-sites');
   assert.match(text, /500/);
   assert.match(text, /partial/);
   assert.match(text, /complete|completeness/);
 });
 test('A3: moved public recipes retain endpoint and exact-ID restrictions', () => {
-  const calendar = read('workiq', 'references/calendar-work-iq.md');
+  const calendar = route('workiq', 'calendar-actions');
   for (const expression of [/sendResponse":false/, /"Comment":""/, /ToRecipients/,
-    /AvailabilityViewInterval: 30/, /trailing `=`/, /%3D/]) assert.match(calendar, expression);
-  const files = read('workiq', 'references/files-work-iq.md');
+    /trailing `=`/, /%3D/]) assert.match(calendar, expression);
+  assert.match(route('workiq', 'calendar-availability'), /AvailabilityViewInterval: 30/);
+  const files = route('workiq', 'files-actions');
   for (const expression of [/createUploadSession` with `\{\}`/, /"folder":\{\}/,
     /conflictBehavior":"fail"/, /parentReference\.driveId/, /Do not add `eTag`/]) assert.match(files, expression);
   const bytes = read('workiq', 'references/fetch-blob-work-iq.md');
@@ -117,6 +120,6 @@ test('package versions remain independently consistent', () => {
 });
 test('preview precedence retains standalone public policy and no missing-tool fallback', () => {
   assert.match(read('workiq', 'SKILL.md'), /When preview is not installed[\s\S]{0,100}ask-first/);
-  assert.match(read('workiq-preview', 'SKILL.md'), /not enable preview[\s\S]{0,20}retrieval/);
-  assert.match(read('workiq-preview', 'SKILL.md'), /Do not fall back to public[\s\S]{0,100}unavailable/);
+  assert.match(route('workiq-preview', 'semantic-context'), /does not enable preview[\s\S]{0,20}retrieval/);
+  assert.match(route('workiq-preview', 'semantic-context'), /Missing retrieval[\s\S]{0,100}public fallback|Never[\s\S]{0,80}substitute public ask-first/i);
 });

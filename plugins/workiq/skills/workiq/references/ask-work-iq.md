@@ -23,6 +23,7 @@ use their entity tools. An exposed `retrieve` alone does not change public polic
 | `agentId` | string | No | Optional agent ID to target a specific M365 Copilot agent. Defaults to bizchat. Use `list_agents` to discover available agent IDs. |
 | `timeZone` | string | No | Advertised IANA time zone for interpreting/returning times; use the host/user's known zone context, not a raw offset or abbreviation. Omit when unavailable. |
 
+
 ## When to Use
 
 Use `ask` when:
@@ -32,6 +33,7 @@ Use `ask` when:
 - Any question that could be answered by Outlook, Teams, SharePoint, OneDrive, or Calendar
 
 Prefer `ask` over entity tools when the question is open-ended or exploratory. Switch to entity tools when you need precise, structured data or need to write/modify data.
+
 
 ## Do NOT use `ask` as a shortcut for:
 
@@ -44,6 +46,7 @@ Establish the requested effect before that chain: a search-like "reply emails"
 phrase does not authorize creation or sending. Exact-thread summary plus reply
 draft uses [Mail](mail-work-iq.md), not an `ask` mutation resolver. All actions
 remain subject to exact identity and required confirmation.
+
 
 ## Source verification and response handling
 
@@ -62,50 +65,5 @@ snippet or invent "these attendees"/"that week". Reuse only the appropriate
 returned `conversationId` for a same-agent follow-up. If earlier context is
 unavailable, disclose it or clarify rather than reconstructing it through a sweep.
 
-## Examples
 
-### People and expertise
-```json
-{ "question": "Who is the expert on authentication in our team?" }
-{ "question": "What has Sarah been focused on lately?" }
-{ "question": "What are the latest top of mind from Rob I should be aware of?" }
-```
-
-### Meetings and decisions
-```json
-{ "question": "What decisions were made in my meeting last week about the new feature?" }
-{ "question": "What action items came out of the sprint planning?" }
-{ "question": "Summarize the architecture discussion from yesterday's standup" }
-```
-
-### Emails and messages
-```json
-{ "question": "Any recent emails from Rob about the deadline?" }
-{ "question": "What did the team discuss in Teams about the release?" }
-{ "question": "Summarize my unread messages from today" }
-```
-
-### Documents and specs
-```json
-{ "question": "Find the design doc for the authentication system" }
-{ "question": "What's the latest spec for Project X?" }
-{ "question": "Where is the API documentation for the payments service?" }
-```
-
-### Calendar and schedule
-
-"What meetings do I have today?" and "What's on my calendar tomorrow?" use
-`fetch` on a date-specific `/me/calendarView` window, not `ask`. See
-[Calendar](calendar-work-iq.md). Meeting decisions and discussion remain semantic.
-
-### Priorities and goals
-```json
-{ "question": "Based on discussions with my manager, what are my top priorities?" }
-{ "question": "What are the team's goals for this quarter?" }
-{ "question": "What's blocking the release?" }
-```
-
-### Grounding implementation work
-```json
-{ "question": "Based on the latest spec for Project X, what are the backend requirements?" }
-```
+Optional examples: [examples](ask-examples-work-iq.md).

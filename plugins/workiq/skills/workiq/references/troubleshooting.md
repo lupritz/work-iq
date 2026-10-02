@@ -98,3 +98,20 @@ Where the diagnostic calls for tenant enablement, refer to the
 [Tenant Administrator Enablement Guide](../../../../../ADMIN-INSTRUCTIONS.md).
 Resume only after reported remediation and still-applicable authorization;
 do not automatically replay a failed operation to provoke sign-in.
+
+## Common action failures (do not retry)
+
+Classify the action's effects before recovery. Generic errors do not establish
+a cause; ambiguous mutation results never authorize replay. Apply the shared
+[recovery policy](troubleshooting.md), not speculative payload or path changes.
+
+| HTTP / code | Meaning | Action |
+|---|---|---|
+| `403` + `"Missing scope permissions"` | The action reports a missing scope | Stop and quote the returned scope; do not promise end-user consent can fix it. |
+| Generic `403 Forbidden` | Forbidden; underlying cause unspecified | Stop without a guessed policy/admin diagnosis or sibling action. |
+| Generic `400 BadRequest` | Rejected; no specific body defect established | Inspect the actual diagnostic/schema. Correct at most once only for a demonstrated pre-execution defect when still authorized. |
+| `404` on `actionUrl` | Not found at that path | Report the scoped result; do not infer a stale ID or unsupported verb from the code alone. |
+
+**Especially for `/me/presence/*`:** stop after a 403 and report the actual
+diagnostic. Do not cycle between `setPresence` and `setUserPreferredPresence`;
+no assumption about another endpoint's permissions authorizes a bypass.

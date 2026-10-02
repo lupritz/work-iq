@@ -147,6 +147,71 @@ schemas, absent results and missing final evidence fail closed.
 An authoritative `currentState` is compared whenever the returned property exists,
 including `false`, `0`, `null`, and `""`; an absent property requires no state claim.
 
+## Progressive loading contract
+
+Both packages now keep universal routing, intent, source, denial, completion and
+URL/opaque-ID rules in `SKILL.md`, then select package-local operation leaves.
+`## Routes` tables select a contract; `## Required before use` linked bullet
+lists declare mandatory dependencies. Other links are conditional help, not
+instructions to load the entire library. Mutation prerequisites apply before
+writes even in mixed read/write recipes; recovery applies before retry or
+reconciliation. Missing guidance stops the affected action. Reuse requires
+available exact text; summaries or uncertain freshness require rereading.
+
+`loading-contract.mjs` parses those Markdown declarations, rather than trusting
+a second test-only dependency graph. Its independent scenario catalog asserts
+expected rule-owning leaves and prerequisites for both packages. Checks reject
+missing files, required edges, cycles, escapes and budget overruns. Operative-rule
+negatives preserve topic labels or put the rule in an unrelated loaded file;
+neither can satisfy the required owner. Existing observed traces remain
+preview-only and do not establish actual reference-read ordering.
+
+Preview's first-call retrieval contract retains sufficiency-stop, source
+restrictions, cap/empty/error non-broadening and objective-budget rules.
+Before any same-objective retrieval follow-up, including after successful but
+insufficient evidence, load the repair route. Saved capped output and concrete
+authorized external-source gaps are not the same as generic failure recovery.
+The public package retains its separate ask-first semantic policy.
+
+Reproduce static load-plan costs with:
+
+```sh
+npm --prefix tests/workiq-guidance run context
+```
+
+The report includes exact file sets, unique UTF-8 byte totals, and approximate
+bytes/4 tokens. It excludes tool schemas, tool output, host framing and history.
+`loading-baseline.json` fixes equivalent full-file comparators at
+`eff05fb49c0d40043e3f5d596b00bef8bfd6a4ca`: the entrypoint plus the named canonical
+semantic/calendar/mail/Teams reference, not a claim that every host actually
+read those files. The after sets include all parsed selected-index and mandatory
+prerequisite files. Loaded guidance is not unloaded; cross-domain tasks accumulate
+the unique union.
+
+| Static plan | Public bytes before → after | Preview bytes before → after |
+| --- | --- | --- |
+| Entrypoint, including metadata | 11,688 → 5,296 | 15,629 → 5,330 |
+| Semantic first call | 17,659 → 9,698 | 28,498 → 10,400 |
+| Ordinary calendar read | 15,872 → 8,377 | 32,337 → 11,623 |
+| Mail thread read | 19,096 → 10,130 | 24,021 → 9,556 |
+| Teams read/list plan with identity prerequisites | 27,448 → 17,595 | 26,373 → 13,547 |
+
+The entry target was 4,400 bytes; the reviewed implementation ceiling is 5,400
+to retain workload triggers, all universal gates and explicit loading routes.
+The routine target was 10,000 bytes. Semantic/mail ceilings are 11,000,
+calendar 12,000, and Teams 18,500 because typed identity and member/topic/marker
+prerequisites must not be dropped. These measured exceptions prioritize safety.
+The report also includes mail/calendar/Planner/presence/contact/Business
+Applications mutations, explicit reminder/delta prerequisites, retrieval follow-up,
+mail-action recovery and cross-domain unions; only the four comparable read
+plans have a shrinkage gate. No claim that every mutation/recovery plan shrank
+is made. Policies and endpoint examples stay package-specific.
+
+Static size reduction is not evidence of actual lazy loading, lower latency,
+answer quality, installed-host activation, or model compliance. Those require
+separately authorized host instrumentation and evaluations. The normal CI suite
+runs no models or live Microsoft 365 operations.
+
 ## Host adapter contract (version 1)
 
 ```sh

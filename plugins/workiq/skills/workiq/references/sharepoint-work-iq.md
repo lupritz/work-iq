@@ -125,3 +125,50 @@ precedence. Endpoint query restrictions and payload shapes remain binding.
 | Listing documents from a named group-backed SharePoint team site | "List documents from the Contoso Research SharePoint team site" | Resolve the backing group by the user's complete, exact site display name: `fetch` `/groups?$filter=displayName%20eq%20'{odataEscapedAndUrlEncodedSiteName}'&$select=id,displayName&$top=1` (do not remove prefix words from the supplied name). Then use exactly `fetch` `/groups/{groupId}/drive?$expand=root` without adding `$select` or nested-expand variants. Copy the returned drive `id` and `root.id` verbatim, then call exactly `fetch` `/drives/{driveId}/items/{rootId}/children?$select=id,name,webUrl,file,folder,parentReference&$top=5`. For this basic drive-item listing workflow, do not use `/root/children`, Microsoft Search, `search_paths`, list/listItem fallbacks, or malformed-id retries. The no-list-fallback rule does not apply when the user requests SharePoint library columns or metadata filtering/aggregation; use the metadata route above for those requests. Use this workflow for named Microsoft 365 group-backed team sites, especially when site search fails or the name contains characters that OData `$search` rejects. See `references/sharepoint-work-iq.md`. |
 | Downloading an explicitly requested SharePoint site-page file | "Download the named .aspx page from a named site-page library" | Use exactly six calls. Resolve the backing group by the complete exact site name; fetch `/groups/{groupId}/drive?$select=id,webUrl,sharePointIds`; fetch `/sites/{sharePointIds.siteId}/lists?$filter=displayName%20eq%20'{odataEscapedAndUrlEncodedLibraryName}'&$select=id,displayName,webUrl,list&$top=10`; fetch `/sites/{siteId}/lists/{listId}/items?$select=id,webUrl&$expand=fields($select=FileLeafRef,Title)&$top=50` and select the exact requested filename; fetch `/sites/{siteId}/lists/{listId}/items/{itemId}/driveItem?$select=id,name,webUrl,parentReference,file,size`; then `fetch_blob` `/drives/{parentReference.driveId}/items/{driveItemId}/content`. For the download item segment, use `driveItem.id`, not the list item id, and insert the complete structured-response value without retyping, shortening, normalizing, or reconstructing it. Before the single `fetch_blob` call, compare that item segment character-for-character with `driveItem.id` and correct any mismatch before calling rather than retrying after failure. Copy every other returned id verbatim. Do not use site search, `/sites/{id}/drives`, root-children guesses, Microsoft Search, `search_paths`, or download-path retries. |
 | Listing all recent documents in one SharePoint site | "List every document modified in one site since a date; include editor and date" | Use `do_action` `/search/query` with a `driveItem` query combining the exact team-site `path`, `IsDocument=true`, and `lastModifiedTime>=YYYY-MM-DD`; `size` is at most `500` (the deployed maximum; `501` is rejected). Request `name`, `webUrl`, `lastModifiedDateTime`, `lastModifiedBy`, `createdBy`, and `parentReference`. Do not probe a larger size. Follow supported search pagination while more results remain; if unavailable, capped or budget-limited, report partial coverage. Size 500 or one page is not proof of all documents. De-duplicate by driveItem identity or `webUrl`, state raw-hit and unique-document counts separately, and list each unique document once. |
+
+### Search documents across SharePoint team sites
+
+Use Microsoft Search for a bounded cross-site document query. This response can
+contain results from multiple SharePoint-backed locations and does not provide
+team-site display names, so derive each site slug from its SharePoint `webUrl`,
+then make one batched `fetch` to
+`/sites?search={siteSlug}&$select=id,displayName,name,webUrl&$top=5` for the
+unique slugs. Return at most five exact file names, resolved site display names,
+and `webUrl` values.
+
+```json
+{
+  "actionUrl": "/search/query",
+  "jsonBody": {
+    "requests": [
+      {
+        "entityTypes": ["driveItem"],
+        "query": {"queryString": "IsDocument:True"},
+        "from": 0,
+        "size": 25,
+        "fields": [
+          "id",
+          "name",
+          "webUrl",
+          "parentReference",
+          "sharepointIds",
+          "file",
+          "folder",
+          "listItem",
+          "lastModifiedDateTime"
+        ]
+      }
+    ]
+  }
+}
+```
+
+For raw content download, continue from the selected search hit to `fetch_blob`
+with `/drives/{driveId}/items/{itemId}/content`. Choose a file document, not a
+folder, home page, SitePages entry, or another `.aspx` site page unless the
+user explicitly asks for a page. Prefer typical document extensions such as
+`.docx`, `.pptx`, `.xlsx`, `.pdf`, and `.txt`.
+
+This is a known action contract. Do not call `ask`, `search_paths`, or
+`get_schema` first. See `references/sharepoint-work-iq.md` for the full
+SharePoint route.

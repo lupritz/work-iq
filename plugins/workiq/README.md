@@ -12,6 +12,19 @@ The compact entrypoint dispatches endpoint recipes to canonical domain reference
 Both packages verify exact sources and intent, preserve supported completeness,
 and stop on explicit denial or ambiguous mutation outcomes.
 
+## Progressive guidance loading
+
+`SKILL.md` keeps routing and universal safety rules. Read the selected domain
+index, then only its operation leaf and `Required before use` links before the
+relevant call. Mutation prerequisites load before any write; recovery loads
+before retry or reconciliation. Exact verbatim guidance must be available:
+reread when uncertain, and stop if a required file is unavailable.
+
+The package-local leaves preserve standalone public ask-first routing and do
+not depend on preview files. This is guidance, not a host-enforced lazy loader.
+Loaded text is not unloaded. [Offline load-plan measurements](../../tests/workiq-guidance/README.md#progressive-loading-contract)
+count unique full-file UTF-8 bytes, not observed model context or compliance.
+
 ## Installation
 
 ### Via GitHub Copilot CLI Plugin Marketplace
