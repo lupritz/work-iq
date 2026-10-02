@@ -81,6 +81,7 @@ plugins/<plugin-name>/
   - Offline checks: `npm ci --prefix tests/workiq-guidance --ignore-scripts --no-audit --no-fund` then `npm --prefix tests/workiq-guidance test` (Node 22+). Static alignment checks cover both packages; observed-trace provenance stays preview-only. CI runs no models or live M365 operations. Current `retrieve.query` is a single nonblank string, not an array.
   - Teams parity includes exact directory/topic/member identity, marker/supplied URL reads, supported paging, hide/read state, literal reactions, edits/replies and preferred presence. Creating/reusing a oneOnOne chat is a confirmed mutation, never a read-only lookup.
   - Observed trace validation requires nonblank package-hash provenance, including direct validator calls; authoritative state claims are compared by property presence, including falsey values.
+  - Trace claim checks retain records from capped reads without treating them as complete coverage; calendar, mail-thread, marker and exact-source regressions also verify failed-read records remain excluded.
 
 - **microsoft-365-agents-toolkit** — Toolkit for building M365 Copilot declarative agents. Bundles:
   - `install-atk` skill — Install or update the M365 Agents Toolkit CLI and VS Code extension

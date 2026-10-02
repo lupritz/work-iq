@@ -95,6 +95,66 @@ test('unrelated successful reads do not erase earlier incomplete evidence', () =
   const result = validateTrace(scenario, trace);
   assert.ok(result.violations.some(v => v.code === 'partial-data'));
 });
+for (const [id, claim, omitted, substituted, violation] of [
+  ['next-event-order', 'nextEvent', undefined, 'synthetic-later-event', 'result-claim'],
+  ['mail-exchange', 'exchangedMessageIds', [], ['synthetic-unsent-message'], 'result-claim'],
+  ['teams-exact-marker', 'messageIds', [], ['synthetic-near'], 'result-claim'],
+  ['exact-artifact-identity', 'resolvedSources', {}, { plan: 'synthetic-near-match' }, 'source-identity']
+]) {
+  const withStatus = status => {
+    const fixture = cases.find(c => c.id === id);
+    assert.ok(fixture, `Missing record-based fixture ${id}`);
+    const scenario = structuredClone(fixture.scenario);
+    const trace = structuredClone(fixture.positive);
+    assert.equal(scenario.operations.length, 1);
+    const operation = scenario.operations[0];
+    assert.equal(operation.effect, 'read');
+    assert.ok(operation.output.records.length);
+    operation.output.status = status;
+    trace.events.find(e => e.type === 'result').value = structuredClone(operation.output);
+    const final = trace.events.at(-1);
+    final.limitations.push('partial-data');
+    final.claims.completeCoverage = false;
+    return { scenario, trace, final };
+  };
+  test(`${id}: capped records preserve faithful claims and reject discarded or substituted evidence`, () => {
+    const { scenario, trace } = withStatus('capped');
+    assert.deepEqual(validateTrace(scenario, trace), { ok: true, violations: [] });
+    for (const value of [omitted, substituted]) {
+      const invalid = structuredClone(trace);
+      const final = invalid.events.at(-1);
+      if (value === undefined) delete final.claims[claim];
+      else final.claims[claim] = structuredClone(value);
+      if (scenario.sourceTargets) final.limitations.push('unresolved-source:plan');
+      const result = validateTrace(scenario, invalid);
+      assert.equal(result.ok, false);
+      assert.ok(result.violations.some(v => v.code === violation),
+        `Expected ${violation}, got ${JSON.stringify(result.violations)}`);
+    }
+  });
+  test(`${id}: capped records still require partial coverage disclosure`, () => {
+    for (const invalidCoverage of ['missing-limitation', 'complete-coverage']) {
+      const { scenario, trace, final } = withStatus('capped');
+      if (invalidCoverage === 'missing-limitation') {
+        final.limitations = final.limitations.filter(value => value !== 'partial-data');
+      } else final.claims.completeCoverage = true;
+      const result = validateTrace(scenario, trace);
+      assert.equal(result.ok, false);
+      assert.ok(result.violations.some(v => v.code === 'partial-data'));
+    }
+  });
+  test(`${id}: failed reads do not contribute records to final claims`, () => {
+    for (const status of ['error', 'timeout', 'transport', 'null', 'throttled', 'denied']) {
+      const { scenario, trace, final } = withStatus(status);
+      final.status = 'blocked';
+      if (omitted === undefined) delete final.claims[claim];
+      else final.claims[claim] = structuredClone(omitted);
+      if (scenario.sourceTargets) final.limitations.push('unresolved-source:plan');
+      if (status === 'denied') final.limitations.push('denied');
+      assert.deepEqual(validateTrace(scenario, trace), { ok: true, violations: [] }, status);
+    }
+  });
+}
 test('waiting before a throttling response does not satisfy its retry delay', () => {
   const fixture = cases.find(c => c.id === 'read-throttling');
   const trace = structuredClone(fixture.positive);

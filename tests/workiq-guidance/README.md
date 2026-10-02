@@ -123,6 +123,11 @@ sends, persisted drafts and read-state changes remain mutations. Tool outputs, n
 agent `approved`, `safe`, or `broadeningJustified` fields, establish facts. Confirmation
 must be a preceding scenario-authored user event for that exact operation and payload.
 Calendar ordering and exchanged-mail membership are computed from returned records.
+Records from `ok`, `partial`, and `capped` reads remain usable evidence for
+calendar, mail-thread, marker, and exact-source claims; failed reads contribute
+no records. Capped evidence still requires `partial-data` disclosure and cannot
+establish complete coverage. Regression checks accept faithful capped claims
+and reject discarded or substituted records.
 Retry delays start after the corresponding observed response; waiting while a call
 is pending does not satisfy a subsequently returned backoff.
 

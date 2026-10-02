@@ -298,7 +298,7 @@ export function validateTrace(scenario, trace, { observed = false } = {}) {
       if (Object.hasOwn(value, key) && !equal(final.claims[key], value[key])) fail('result-claim', `Claim ${key} conflicts with authoritative returned entities.`);
     }
   }
-  const records = values.filter(value => ['ok', 'partial'].includes(value.status)).flatMap(value => value.records ?? []);
+  const records = values.filter(value => ['ok', 'partial', 'capped'].includes(value.status)).flatMap(value => value.records ?? []);
   if (scenario.messageMarker) {
     const matching = records.filter(record => record.body?.content?.includes(scenario.messageMarker)).map(record => record.id);
     if (!equal(final.claims.messageIds, matching)) fail('result-claim', 'Only exact marker messages belong in the requested summary.');
