@@ -1,7 +1,9 @@
 # WorkIQ workflow index
 
-Start with [the dispatcher](../SKILL.md). Public semantic synthesis/discovery is
-ask-first; exact operations use the domain reference, not semantic preflight.
+Start with [the dispatcher](../SKILL.md). If both plugins are installed, load
+`workiq-preview` and follow its routing for overlapping requests instead.
+Standalone public semantic synthesis/discovery is ask-first; exact operations
+use the domain reference, not semantic preflight.
 For library columns use [metadata](sharepoint-library-metadata.md), not content
 search. Use [Teams](teams-work-iq.md) for exact people/topics, marker messages,
 member identity, paging and confirmed actions.

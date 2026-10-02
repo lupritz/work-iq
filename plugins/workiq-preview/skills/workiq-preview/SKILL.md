@@ -1,6 +1,6 @@
 ---
 name: workiq-preview
-description: WorkIQ tools for Microsoft 365 workplace data and actions. Use for email, meetings, calendar, files, SharePoint, OneDrive, Teams, people, Planner, and connected work context. Triggers include gather requirements, summarize workplace discussions, manage meetings, create an upload session, send or draft replies, manage tasks, and discover paths or schemas. Retrieve context first with explicit Grounding when available and synthesize locally; use ask only for intentional delegation to Copilot or a known/discovered agent. Exact entities, structured workflows, writes, and downloads stay on entity tools. This skill contains instructions for the WorkIQ MCP tools and must be used beforehand to understand their usage.
+description: WorkIQ tools for Microsoft 365 workplace data and actions. Use for email, meetings, calendar, files, SharePoint, OneDrive, Teams, people, Planner, and connected work context. Triggers include gather requirements, summarize workplace discussions, manage meetings, create an upload session, send or draft replies, manage tasks, and discover paths or schemas. When both plugins are installed, workiq-preview takes precedence over workiq. Retrieve context first with explicit Grounding when available and synthesize locally; use ask only for intentional delegation to Copilot or a known/discovered agent. Exact entities, structured workflows, writes, and downloads stay on entity tools. This skill contains instructions for the WorkIQ MCP tools and must be used beforehand to understand their usage.
 compatibility: >
   Uses the hosted WorkIQ MCP endpoint. No local package is required for MCP
   tool calls.
@@ -13,9 +13,11 @@ Tools use WorkIQ entity paths, not arbitrary Microsoft Graph URLs.
 This policy is agent-host-neutral; use the current host's tool catalog, skill
 loading, confirmation, and result-handling mechanisms.
 
-Follow the WorkIQ configuration selected by the host or user; another installed
-M365 skill does not override it. Public ask-first policy does not change this
-package's retrieve-first policy.
+When both plugins are installed, workiq-preview takes precedence over workiq.
+Use this skill and its configured tools for overlapping requests, with
+retrieve-first evidence gathering rather than public ask-first routing.
+Do not fall back to public routing when preview retrieval is unavailable;
+follow the availability and explicit-delegation rules below.
 
 **Resolve tool names first.** These are logical names. Discover the exact names
 and live schemas in the connected `workiq-preview` MCP catalog; load deferred definitions

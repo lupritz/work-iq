@@ -69,12 +69,13 @@ plugins/<plugin-name>/
 ### Available plugins
 
 - **workiq** — Full WorkIQ tool surface for Microsoft 365 (read + write). Bundles:
-  - `workiq` skill — Ask-first semantic synthesis/discovery; entity tools for exact M365 and Business Applications reads/writes. Load before use and respect the host/user-selected configuration. Exposed `retrieve` does not change the public default.
+  - `workiq` skill — Ask-first semantic synthesis/discovery when used without preview; entity tools for exact M365 and Business Applications reads/writes. When both plugins are installed, load `workiq-preview` and follow its guidance for overlapping requests. Exposed `retrieve` alone does not change the standalone public default.
   - Hosted MCP server (`workiq`): resolve exact tool names and schemas from its connected catalog, not guessed prefixes. Current `search_paths.query` is a string; legacy `filter` applies only when advertised.
   - Compact entry dispatches to mail, Teams, calendar, files, SharePoint and workflow references. Exact-source verification, read/write intent, complete paging versus budgets, diagnostic-driven recovery and denial stops apply to both packages. Public and preview versions are independent.
   - SharePoint library-metadata requests dispatch to `references/sharepoint-library-metadata.md`; read it before the workflow. Detailed procedures and safeguards live there rather than being duplicated in `SKILL.md`.
 
 - **workiq-preview** — Preview build with agent-host-neutral, retrieve-first guidance (read + write). Bundles:
+  - Takes precedence over public `workiq` when both plugins are installed, including their routing and configured tools for overlapping requests. Missing preview retrieval does not authorize public ask-first fallback; skill guidance does not claim host-enforced activation.
   - `workiq-preview` skill — Retrieve caller-owned context with explicit Grounding when available; use `ask` only for intentional delegation, and entity tools for exact reads, writes, and downloads. Load the skill before using WorkIQ tools.
   - Hosted MCP server (`workiq-preview`): discover exact tool names and schemas in the connected host catalog. Preview retrieval is tenant-dependent; installation does not enable it, and missing `retrieve` never silently falls back to `ask`.
   - Offline checks: `npm ci --prefix tests/workiq-guidance --ignore-scripts --no-audit --no-fund` then `npm --prefix tests/workiq-guidance test` (Node 22+). Static alignment checks cover both packages; observed-trace provenance stays preview-only. CI runs no models or live M365 operations. Current `retrieve.query` is a single nonblank string, not an array.

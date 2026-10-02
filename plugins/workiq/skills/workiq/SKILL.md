@@ -1,6 +1,6 @@
 ---
 name: workiq
-description: WorkIQ tools for Microsoft 365 workplace data and actions. Use for email, calendar events and meetings, files, SharePoint, OneDrive, Teams, people, Planner, and other M365 requests. Triggers include cancel meeting or event, accept or decline meetings, create or update events, create an upload session or replace an existing OneDrive file, find or summarize workplace content, send or reply to mail, manage or download files, manage tasks, read SharePoint library metadata or columns, filter/count/group/sort files by metadata, and discover M365 paths or schemas. Prefer `ask` for semantic synthesis/discovery and structured entity tools for exact reads, writes, SharePoint library metadata, and binary downloads with `fetch_blob`. This skill contains instructions for the WorkIQ MCP tools and must be used beforehand to understand their usage.
+description: WorkIQ tools for Microsoft 365 workplace data and actions. Use for email, calendar events and meetings, files, SharePoint, OneDrive, Teams, people, Planner, and other M365 requests. Triggers include cancel meeting or event, accept or decline meetings, create or update events, create an upload session or replace an existing OneDrive file, find or summarize workplace content, send or reply to mail, manage or download files, manage tasks, read SharePoint library metadata or columns, filter/count/group/sort files by metadata, and discover M365 paths or schemas. When both plugins are installed, workiq-preview takes precedence over workiq. Otherwise prefer `ask` for semantic synthesis/discovery and structured entity tools for exact reads, writes, SharePoint library metadata, and binary downloads with `fetch_blob`. This skill contains instructions for the WorkIQ MCP tools and must be used beforehand to understand their usage.
 compatibility: >
   Uses the hosted WorkIQ MCP endpoint. No local package is required for MCP
   tool calls.
@@ -8,11 +8,14 @@ compatibility: >
 
 # WorkIQ
 
-Use WorkIQ for Microsoft 365 workplace data and actions. Follow the WorkIQ
-configuration selected by the host or user; another installed M365 skill does
-not override that selection. This public package is **ask-first for semantic
-synthesis/discovery**, even when its server also exposes `retrieve`. That
-capability does not change the default or select preview policy.
+Use WorkIQ for Microsoft 365 workplace data and actions.
+When both plugins are installed, workiq-preview takes precedence over workiq.
+Load and follow the preview skill and use its configured tools for overlapping
+requests instead of this package's routing below.
+
+When preview is not installed, this public package remains **ask-first for
+semantic synthesis/discovery**, even when its server also exposes `retrieve`.
+Exposing that capability alone does not change the public default.
 
 ## Before the first call
 

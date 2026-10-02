@@ -93,8 +93,9 @@ npm --prefix tests/workiq-guidance test
 The [guidance contract](tests/workiq-guidance/README.md) covers parsed
 frontmatter, local links, package-specific routing, metadata and synthetic checks.
 The observed-trace adapter remains preview-only; cross-package static checks
-preserve public ask-first versus preview retrieve-first, not policy/version
-equality. Keep each package consistent across its host manifests,
+preserve standalone public ask-first versus preview retrieve-first, with preview
+taking precedence for overlapping requests when both plugins are installed,
+not policy/version equality. Keep each package consistent across its host manifests,
 `marketplace.json` and `.claude-plugin/marketplace.json`.
 
 Preview guidance is agent-host-neutral; resolve logical tools against the current

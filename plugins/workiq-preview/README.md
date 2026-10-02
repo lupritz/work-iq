@@ -4,8 +4,10 @@ Agent-host-neutral WorkIQ tools for compatible AI agents: caller-owned context
 via available `retrieve` with explicit Grounding by default, intentional agent
 delegation via `ask`, and exact Microsoft 365 reads and writes.
 
-Follow the configuration selected by the host or user; public ask-first guidance
-does not override this package when both are installed. Current `retrieve.query`
+When both plugins are installed, **workiq-preview takes precedence over workiq**
+for overlapping requests. Use preview's skill, tools and retrieve-first routing;
+unavailable preview retrieval does not trigger public ask-first fallback.
+Current `retrieve.query`
 is one nonblank string, not an array. Both skills verify exact sources and
 read/write intent before acting. Teams guidance shares exact directory/member
 identity, topic/marker/URL reads and known action contracts, while preserving

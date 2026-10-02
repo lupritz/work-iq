@@ -1,10 +1,11 @@
 # ask
 
 Query Microsoft 365 Copilot for workplace intelligence using natural language.
-Public `workiq` is ask-first for semantic synthesis and discovery. Exact entities,
+When both plugins are installed, `workiq-preview` takes precedence; load its skill
+instead of using this public ask-first policy for overlapping requests.
+Standalone public `workiq` is ask-first for semantic synthesis and discovery. Exact entities,
 known-date calendar, library columns, complete structured collections and bytes
-use their entity tools. An exposed `retrieve` does not change this policy; follow
-the configuration selected by the host or user.
+use their entity tools. An exposed `retrieve` alone does not change public policy.
 
 > **Recovery:** Latency/timeout does not establish a cause. Do not automatically
 > fan out a failed question. Honor actual backoff and the shared objective budget

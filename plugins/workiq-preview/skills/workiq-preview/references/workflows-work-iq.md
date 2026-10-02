@@ -4,6 +4,10 @@ Start with the [quick guide](../SKILL.md); read only the contract needed below.
 This file owns setup, people, explicit discovery, and cross-domain sequencing.
 Domain references own their endpoint recipes.
 
+When both plugins are installed, `workiq-preview` takes precedence over `workiq`
+for overlapping requests. Use this package's tools and routing, not public
+ask-first guidance. Missing preview retrieval does not authorize public fallback.
+
 ## Choose by intent and ownership
 
 | Intent | Route and canonical contract |

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { retrievalProblems } from './contract.mjs';
-import { root, skillRoot, markdownFiles, frontmatterProblems, linkProblems, exampleProblems } from './doc-lint.mjs';
+import { root, skillRoot, markdownFiles, parseMarkdown, frontmatterProblems, linkProblems, exampleProblems } from './doc-lint.mjs';
 
 const read = (name, file) => fs.readFileSync(path.join(skillRoot(name), file), 'utf8');
 const both = ['workiq', 'workiq-preview'];
@@ -15,11 +15,15 @@ test('A1: current retrieval accepts a string and rejects arrays or blank queries
   }
 });
 for (const name of both) {
-  test(`${name}: A1/A2/A3 selected configuration, loading and compact entry`, () => {
+  test(`${name}: A1/A2/A3 preview precedence, loading and compact entry`, () => {
     const main = read(name, 'SKILL.md');
     assert.deepEqual(frontmatterProblems(main, name), []);
     assert.match(main, /must be used beforehand/);
-    assert.match(main, /configuration selected by the host or user/);
+    const { frontmatter } = parseMarkdown(main);
+    assert.match(frontmatter.description, /When both plugins are installed, workiq-preview takes precedence over workiq/);
+    assert.match(main.slice(main.indexOf('# WorkIQ')).replace(/[*`\n]/g, ' '),
+      /When both plugins are installed, workiq-preview takes precedence over workiq/);
+    assert.doesNotMatch(main, /configuration selected by the host or user|does not override (?:it|that selection)/);
     assert.match(main, /exact.*(?:names|name)[\s\S]{0,120}(?:catalog|schema)/i);
     assert.doesNotMatch(main, /always prefer this skill|under a second/);
     assert.ok(main.split('\n').length < 230, 'entrypoint should dispatch long recipes');
@@ -103,10 +107,16 @@ test('package versions remain independently consistent', () => {
     .map(file => JSON.parse(fs.readFileSync(path.join(root, file), 'utf8')));
   for (const name of both) {
     const canonical = registries[0].plugins.find(entry => entry.name === name);
+    assert.match(canonical.description, /When both plugins are installed, workiq-preview takes precedence over workiq/);
     const manifests = ['.github/plugin', '.claude-plugin', '.codex-plugin']
       .map(host => JSON.parse(fs.readFileSync(path.join(root, 'plugins', name, host, 'plugin.json'), 'utf8')));
     for (const entry of [registries[1].plugins.find(entry => entry.name === name), ...manifests]) {
       for (const field of ['name', 'version', 'description']) assert.equal(entry[field], canonical[field]);
     }
   }
+});
+test('preview precedence retains standalone public policy and no missing-tool fallback', () => {
+  assert.match(read('workiq', 'SKILL.md'), /When preview is not installed[\s\S]{0,100}ask-first/);
+  assert.match(read('workiq-preview', 'SKILL.md'), /not enable preview[\s\S]{0,20}retrieval/);
+  assert.match(read('workiq-preview', 'SKILL.md'), /Do not fall back to public[\s\S]{0,100}unavailable/);
 });
