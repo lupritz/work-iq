@@ -181,14 +181,16 @@ test('static example and policy lint reject policy mutations without paragraph s
     '| Access denied | Unknown reason | Try a different path |').some(e => e.includes('alternate path')));
   assert.deepEqual(exampleProblems('```json\n{"actionUrl":"/search/query","jsonBody":{"query":{"queryString":"synthetic"}}}\n```'), []);
 });
-test('path-discovery query strings are not confused with retrieval query arrays', () => {
+test('path discovery and retrieval both use strings but have different strategy fields', () => {
   const example = value => `# search_paths\n\n\`\`\`json\n${JSON.stringify(value)}\n\`\`\`\n`;
   assert.deepEqual(exampleProblems(example({ query: '/me/people' })), []);
-  for (const args of [{ query: [] }, { query: '' }, { query: '/me/people', strategy: 'grounding' }]) {
+  for (const args of [{}, { filter: 'people' }, { query: [] }, { query: '' },
+    { query: '/me/people', agentId: 'unsupported' }, { query: '/me/people', strategy: 'grounding' }]) {
     assert.ok(exampleProblems(example(args)).length);
   }
   assert.ok(exampleProblems(example({ query: 'invalid retrieve query' }), true).length);
-  assert.ok(exampleProblems('# retrieve\n\n```json\n{"query":"invalid","strategy":"grounding"}\n```').length);
+  assert.deepEqual(exampleProblems('# retrieve\n\n```json\n{"query":"valid","strategy":"grounding"}\n```'), []);
+  assert.ok(exampleProblems('# retrieve\n\n```json\n{"query":["invalid"],"strategy":"grounding"}\n```').length);
 });
 test('host adapter envelope and raw receipts are checked (synthetic adapter unit only)', () => {
   const fixture = cases[0];
@@ -253,8 +255,7 @@ test('CI is narrow, read-only, pinned and separates evidence layers', () => {
   const workflow = parseDocument(fs.readFileSync(new URL('../../.github/workflows/workiq-guidance.yml', import.meta.url), 'utf8')).toJS();
   assert.deepEqual(workflow.permissions, { contents: 'read' });
   for (const trigger of ['pull_request', 'push']) {
-    assert.ok(!workflow.on[trigger].paths.includes('plugins/workiq/**'));
-    for (const pattern of ['plugins/workiq-preview/**', '*.md', 'tests/workiq-guidance/**',
+    for (const pattern of ['plugins/workiq/**', 'plugins/workiq-preview/**', '*.md', 'tests/workiq-guidance/**',
       'marketplace.json', '.claude-plugin/marketplace.json']) {
       assert.ok(workflow.on[trigger].paths.includes(pattern));
     }

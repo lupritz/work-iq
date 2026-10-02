@@ -70,6 +70,12 @@ history by default.
 
 ## "Draft" vs "send" — pick the right verb
 
+Establish intent first: finding existing replies, suggested wording, persisting
+a draft and sending are separate effects. Search-like phrases such as "reply
+emails last week" remain read-only pending clarification; they authorize no draft
+or send. A failed `createReply` does not authorize a fresh message substitute,
+`createReplyAll`, or sending. An absent user is not confirmation.
+
 When the user wants a draft to **exist**, persist it without sending. Inline
 wording alone does not satisfy an Outlook draft request. A reply draft must use
 `createReply` on the resolved original message, not a fresh `/me/messages` draft

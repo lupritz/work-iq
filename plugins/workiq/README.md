@@ -2,6 +2,15 @@
 
 Full WorkIQ tool surface for GitHub Copilot CLI: agentic semantic queries via `ask` **plus** direct, structured reads and writes against Microsoft 365 — emails, meetings, calendar, documents, Teams messages, OneDrive/SharePoint files, and people.
 
+Public `workiq` remains **ask-first** for semantic synthesis/discovery even when
+its connected server exposes `retrieve`. Follow the configuration selected by
+the host or user; installing both plugins does not override preview selection.
+Load the skill before tool use. Exact entities, known-date calendar, library
+columns, complete structured collections and downloads use entity tools.
+The compact entrypoint dispatches endpoint recipes to canonical domain references.
+Both packages verify exact sources and intent, preserve supported completeness,
+and stop on explicit denial or ambiguous mutation outcomes.
+
 ## Installation
 
 ### Via GitHub Copilot CLI Plugin Marketplace

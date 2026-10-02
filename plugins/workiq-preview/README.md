@@ -4,6 +4,13 @@ Agent-host-neutral WorkIQ tools for compatible AI agents: caller-owned context
 via available `retrieve` with explicit Grounding by default, intentional agent
 delegation via `ask`, and exact Microsoft 365 reads and writes.
 
+Follow the configuration selected by the host or user; public ask-first guidance
+does not override this package when both are installed. Current `retrieve.query`
+is one nonblank string, not an array. Both skills verify exact sources and
+read/write intent before acting. Teams guidance shares exact directory/member
+identity, topic/marker/URL reads and known action contracts, while preserving
+preview source restrictions, confirmation and non-replay recovery.
+
 ## Installation
 
 Use the selected host's plugin/skill loader and MCP connection mechanism. This

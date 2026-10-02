@@ -8,6 +8,12 @@ POST a WorkIQ action — a named operation that performs a task (send mail, copy
 
 ## Parameters
 
+Establish intent and the requested effect before acting. Search-like phrases
+containing "reply", "message" or "draft" do not authorize a mutation; remain
+read-only and clarify. Draft creation, suggested wording and sending differ.
+All outcomes and retries follow [recovery](troubleshooting.md); `202` alone is
+accepted/pending, never proof of completion.
+
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `actionUrl` | string | Yes | Action path, server-relative (`/me/sendMail`, `/me/messages/{id}/copy`). Start with `/`, no scheme or authority. URL-encode special characters. |
@@ -345,13 +351,17 @@ session, report only non-secret metadata such as `expirationDateTime` and
 
 ## Common failures (do not retry)
 
-`do_action` failures from Microsoft Graph are almost always permanent on the same payload. **Do not retry the same call** after any of these — repeated identical POSTs return the exact same error and burn tool budget without producing new information.
+Classify the action's effects before recovery. Generic errors do not establish
+a cause; ambiguous mutation results never authorize replay. Apply the shared
+[recovery policy](troubleshooting.md), not speculative payload or path changes.
 
 | HTTP / code | Meaning | Action |
 |---|---|---|
-| `403` + `"Missing scope permissions"` | The signed-in user has not consented to the Graph scope this action needs (e.g. `Presence.ReadWrite` for `/me/presence/setPresence`, `Mail.Send` for `/me/sendMail`, `Calendars.ReadWrite` for `/me/events/{id}/accept`). | Stop. Tell the user the consent is missing and identify the missing scope from the error body. See [`troubleshooting.md`](troubleshooting.md#http-403-forbidden-on-an-entity-tool-call). |
-| `403` + empty / generic `Forbidden` | Tenant policy or admin-controlled action (e.g. presence write in a managed tenant, send-as another mailbox). The body has no scope hint because the directory denied the call before scope evaluation. | Stop. Tell the user the operation is policy-denied. Do NOT iterate through sibling action verbs (`setUserPreferredPresence` ↔ `setPresence`) — they share the same policy gate. |
-| `400` / `BadRequest` on the body | The `jsonBody` wrapper shape is wrong (e.g. `sendMail` expects `{Message, SaveToSentItems}`, not a raw `Message`). | Stop. Re-read this file's JSON sample for that action; do not re-send the same body. |
-| `404` on `actionUrl` | The entity ID embedded in the path is stale, or the action verb does not exist on this resource family. | Stop. Re-`fetch` to get the current ID, OR re-check `search_paths` for the right action verb. |
+| `403` + `"Missing scope permissions"` | The action reports a missing scope | Stop and quote the returned scope; do not promise end-user consent can fix it. |
+| Generic `403 Forbidden` | Forbidden; underlying cause unspecified | Stop without a guessed policy/admin diagnosis or sibling action. |
+| Generic `400 BadRequest` | Rejected; no specific body defect established | Inspect the actual diagnostic/schema. Correct at most once only for a demonstrated pre-execution defect when still authorized. |
+| `404` on `actionUrl` | Not found at that path | Report the scoped result; do not infer a stale ID or unsupported verb from the code alone. |
 
-**Especially for `/me/presence/*`:** if the first `setPresence` or `setUserPreferredPresence` POST returns 403, the second will too. Both verbs share the `Presence.ReadWrite[.All]` scope gate. Stop after one 403, surface the failure, and identify the missing consent scope if the error body names one.
+**Especially for `/me/presence/*`:** stop after a 403 and report the actual
+diagnostic. Do not cycle between `setPresence` and `setUserPreferredPresence`;
+no assumption about another endpoint's permissions authorizes a bypass.

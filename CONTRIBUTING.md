@@ -83,18 +83,19 @@ Description and parameters...
 - Test your MCP server starts correctly
 - Ensure your skill documentation is accurate
 
-For `workiq-preview` guidance changes, use Node 22+:
+For `workiq` or `workiq-preview` guidance changes, use Node 22+:
 
 ```bash
 npm ci --prefix tests/workiq-guidance --ignore-scripts --no-audit --no-fund
 npm --prefix tests/workiq-guidance test
 ```
 
-The [preview guidance contract](tests/workiq-guidance/README.md) covers parsed
-frontmatter, local links, routing, metadata, and synthetic trace checks. It does
-not apply the preview policy to the public `workiq` package or require their
-versions to match. Keep preview metadata consistent across its host manifests,
-`marketplace.json`, and `.claude-plugin/marketplace.json`.
+The [guidance contract](tests/workiq-guidance/README.md) covers parsed
+frontmatter, local links, package-specific routing, metadata and synthetic checks.
+The observed-trace adapter remains preview-only; cross-package static checks
+preserve public ask-first versus preview retrieve-first, not policy/version
+equality. Keep each package consistent across its host manifests,
+`marketplace.json` and `.claude-plugin/marketplace.json`.
 
 Preview guidance is agent-host-neutral; resolve logical tools against the current
 host's catalog. After editing it, reinstall/reload `workiq-preview` using that

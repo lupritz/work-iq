@@ -107,16 +107,16 @@ export function exampleProblems(text, isRetrieveReference = false) {
       if (!object || typeof object !== 'object') return;
       if (Object.hasOwn(object, 'actionUrl') || Object.hasOwn(object, 'entityUrls') ||
           Object.hasOwn(object, 'functionUrl')) return;
-      if (Object.hasOwn(object, 'query')) {
-        if (isPathDiscovery) {
-          if (typeof object.query !== 'string' || !object.query.trim()) {
-            errors.push(`${code.heading}: search_paths query must be a nonblank string`);
-          }
-          if (Object.keys(object).some(key => key !== 'query')) {
-            errors.push(`${code.heading}: unsupported current search_paths argument`);
-          }
-          return;
+      if (isPathDiscovery) {
+        if (typeof object.query !== 'string' || !object.query.trim()) {
+          errors.push(`${code.heading}: search_paths query must be a nonblank string`);
         }
+        if (Object.keys(object).some(key => key !== 'query')) {
+          errors.push(`${code.heading}: unsupported current search_paths argument`);
+        }
+        return;
+      }
+      if (Object.hasOwn(object, 'query')) {
         errors.push(...retrievalProblems(object).map(p => `${code.heading}: ${p}`));
         if (/unknown|unspecified/i.test(code.heading) && !/external|broader|conflict/i.test(code.heading) && object.strategy !== 'grounding') {
           errors.push(`${code.heading}: unknown source must explicitly select Grounding`);

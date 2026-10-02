@@ -23,22 +23,22 @@ with…", "mark … done", or "list my tasks", that is M365 data: route it to Wo
 Planner task body fields: `planId`, `title`, `bucketId`, `assignments`, `dueDateTime`,
 `percentComplete` (`0` = not started, `50` = in progress, `100` = complete).
 
-- **Find the plan before using `ask` (required for named-plan requests):**
+- **Resolve named plans structurally:**
   1. Fetch owned plans with `/me/planner/plans?$select=id,title,owner`.
   2. Search that full result locally for the requested title or keywords. Do not stop after the
      first page if the response includes `@odata.nextLink`.
-  3. If the plan is not in `/me/planner/plans`, resolve likely backing groups before using `ask`.
+  3. If the plan is not in `/me/planner/plans`, resolve supported backing-group candidates.
     Fetch `/me/joinedTeams?$select=id,displayName,description` to get group IDs for Teams the
-    user has joined, guess likely team/group names, then fetch
+    user has joined, select bounded candidates from returned group details, then fetch
     `/groups/{group-id}/planner/plans?$select=id,title,owner` to get the plan ID. Do not pass
     `$top` to `/me/joinedTeams`.
   4. If `/me/joinedTeams` misses, use known group IDs when provided or fetch the user's joined
     groups and then fetch `/groups/{group-id}/planner/plans?$select=id,title,owner`.
   5. If you have an owner/group ID but not the group-plans path, use
     `/planner/plans?$filter=owner eq '{Group or UserId}'&$select=id,title,owner`.
-  6. Only use `ask` after the structured `/me/planner/plans`, assigned-task `planId`, group-backed
-    `/groups/{group-id}/planner/plans`, and owner-filtered `/planner/plans` lookup paths are
-    exhausted, unavailable, or policy-blocked.
+  6. If focused supported lookups cannot resolve the exact plan, disclose the
+    searched scope; do not use `ask` to invent authoritative identity.
+    Explicit access/policy denial stops, never a semantic fallback.
 - **Private tasks and "Assigned to me" tasks:** use `/me/planner/tasks`.
 - **Enforce filtering on Planner collection GETs:**
   - `GET /planner/plans` requires `$filter=owner eq '{Group or UserId}'`.
@@ -53,15 +53,18 @@ Planner task body fields: `planId`, `title`, `bucketId`, `assignments`, `dueDate
 - **Mark a Planner task done:** `update_entity` with `{"percentComplete":100}`.
 - **Planner gotcha:** `update_entity` / `delete_entity` on Planner resources
   require the current `@odata.etag` (an `If-Match` precondition). Fetch the task first to
-  read its etag; if a Planner write returns a `412`/precondition error, re-fetch and retry.
+  read its etag; on `412`, reread and compare concurrent changes, reconcile the
+  intended update and reconfirm any changed action. Never blindly overwrite.
 
 
 ## Resolve-then-act (do not loop)
 
 1. Resolve the target with `fetch` (Planner task) — match by `title`. (Planner plan) - first using `/me/planner/plans` else using `/groups/{group-id}/planner/plans`
-2. If the fetch does not find it, try **one** `ask` to locate it semantically.
+2. If needed, make one bounded structured refinement in the same authorized scope.
 3. If still not found, **stop and report "not found"** — do not fire 10+ more `fetch`/`search_paths`/`ask` calls.
-4. Once you have the id, call the mutation (`create_entity` / `update_entity` / `delete_entity`).
+4. Establish write intent, prepare and obtain required confirmation before the
+   mutation (`create_entity` / `update_entity` / `delete_entity`). Follow
+   [recovery](troubleshooting.md); target resolution alone is not authorization.
 
 ## Examples
 

@@ -4,6 +4,14 @@ Use the WorkIQ **entity tools** for Teams requests — sending/reading chat mess
 channels, replying, reacting, and presence. Use `ask` only for synthesis questions
 ("what's the team's take on the release?"), not for sending or listing messages.
 
+Establish intent first. "Reply messages last week" can mean finding existing
+content, not posting; remain read-only and clarify an unclear effect. Confirm
+the exact target/content for mutations, including creating a chat, read state,
+hide and presence. An absent user is not approval. Call counts are happy-path
+goals subordinate to identity, confirmation and supported complete paging.
+Follow [recovery](troubleshooting.md): denial stops and ambiguous writes are not
+replayed. Missing identity/tenant fields block the action, not invite guesses.
+
 Known Teams mutations — message edits, `hideForUser`, mark read or unread,
 and reactions — must use the documented workflows below directly. Do not call
 `search_paths` or `get_schema` for them.
@@ -70,18 +78,24 @@ reads and mutations:
 
 Pick the lookup that matches how the user named the chat.
 
-**By person (1:1 chat).** Microsoft Graph permits only one one-on-one chat for
+**By person (authorized 1:1 create-or-return).** Microsoft Graph permits only one one-on-one chat for
 a pair of users. If it already exists, this call returns that existing chat
 instead of creating a duplicate. Require a non-empty returned chat ID and
-`chatType == "oneOnOne"`. Do not enumerate `/me/chats` for a named person.
+`chatType == "oneOnOne"`. This is a mutation, not a read-only lookup. Use it only
+when creating/reusing that chat is authorized (for example, a confirmed send or
+read-state change that also permits chat creation). For finding existing
+messages, read-only requests, edits or reactions without chat-creation approval,
+resolve an existing chat through `/me/chats?$expand=members` and supported paging,
+matching the verified directory counterpart. Do not create a chat merely to
+find old content or silently add this effect to another mutation.
 
 1. Resolve the signed-in user and a verified directory-user counterpart:
    - When the user supplied an email address or UPN, fetch `/me?$select=id` and
      `/users/{urlEncodedUserPrincipalName}?$select=id,displayName,mail,userPrincipalName`.
    - Otherwise, fetch `/me?$select=id` and
      `/users?$filter=displayName%20eq%20%27{odataEscapedAndUrlEncodedExactDisplayName}%27&$select=id,displayName,mail,userPrincipalName&$top=10`.
-2. Require exactly one returned directory user whose `displayName` exactly
-   matches the requested person. If no user or multiple users match, ask for
+2. Require exactly one returned directory user matching the supplied email/UPN
+   or, for a name lookup, the complete `displayName`. If no user or multiple users match, ask for
    an email address or UPN instead of guessing. Do not use `/me/people`;
    People results can be fuzzy or represent contacts rather than directory
    users.
@@ -117,7 +131,7 @@ and require an exact `topic` match. If the response includes
 and `markChatUnreadForUser` need the signed-in member whose `userId` equals
 `{signedInUserId}`. If the chat lookup already returned members (as the topic
 lookup does), use them. Do not fetch `/chats/{chatId}/members` again.
-Otherwise, fetch exactly `/chats/{chatId}/members`. The URL must end at
+Otherwise, fetch exactly `/chats/{chatId}/members` with no query string. The URL must end at
 `/members`; do not append any query string, including `$select`, `$expand`, or
 `$top`. `userId` and
 `tenantId` are returned by the unfiltered response but are not selectable
@@ -138,14 +152,16 @@ Use the matching message's `id` in the follow-up call.
 
 ## Listing chats and channel members
 
-For "show my Teams chats", call `fetch` exactly once on
+For "show my Teams chats", the bounded happy path is one `fetch` on
 `/me/chats?$expand=members` and answer from the returned `topic`, `chatType`,
 and `members`. Do not follow or construct `$skip`, and do not add member
 `$select` fields such as `email` or `userId`; those fields are not exposed on
-`conversationMember`. A successful chat list is sufficient; do not make
-enrichment or pagination retries.
+`conversationMember`. No enrichment is needed after success. Follow supported
+returned `@odata.nextLink` for all/every/complete requests or disclose partial
+coverage if continuation is unsupported or a budget prevents it. A bounded
+listing is not proof of absence or a complete history.
 
-For a named channel-member listing, use at most three `fetch` calls:
+For a named channel-member listing, the happy path is three `fetch` calls:
 **Finding a channel**, then exactly
 `/teams/{teamId}/channels/{channelId}/members`. The deployed members endpoint
 does not allow `$top`; do not add it. Do not request `email` or `userId` with
@@ -174,6 +190,9 @@ Message body shape (chat and channel):
    `references/do-action-work-iq.md`:
    - Channel: `/teams/{teamId}/channels/{channelId}/messages/{messageId}/setReaction`
    - Chat: `/chats/{chatId}/messages/{messageId}/setReaction`
+
+The known deployed body uses a literal reaction, e.g. `{"reactionType":"👍"}`,
+not `like`. Confirm the reaction and exact message before executing once.
 
 ## Edit a message
 
@@ -211,7 +230,7 @@ For a topic lookup, do not issue a separate `/me` or
 
 This is a known deployed contract. Do not call `search_paths` or `get_schema`.
 
-For mark-read, the sequence is exactly:
+After confirmation of all effects, the mark-read happy path is:
 
 1. `fetch` the signed-in user and exact counterpart with **Finding a chat —
    By person**.
@@ -231,7 +250,8 @@ fields. If the action returns HTTP 500 or another ambiguous result, do not
 replay it. Re-fetch the chat state when it is observable; otherwise report the
 outcome as indeterminate.
 
-The Teams action payloads in `references/do-action-work-iq.md` are known
+If chat creation is not authorized, resolve the existing chat read-only instead;
+if none is found in scope, stop. The Teams action payloads in `references/do-action-work-iq.md` are known
 deployed contracts; call them directly. Use `get_schema` only for an
 undocumented action shape.
 
@@ -250,6 +270,26 @@ identifiers, timestamps, sender and location metadata, reactions, replies,
 hosted contents, and message history. If the returned schema exposes a broad
 resource model without reliable writability annotations, state that limitation
 instead of claiming every exposed property can be supplied on create.
+
+## Exact marker messages and supplied URLs
+
+For exact marker messages, resolve the exact team/channel, then fetch
+`/teams/{teamId}/channels/{channelId}/messages?$select=id,createdDateTime,body`.
+Omit `$top` and `$orderby`; filter locally to the complete exact marker. Do not
+use semantic search, which can miss recent posts or mix unrelated history.
+Do not fetch replies unless requested. Follow supported paging for requested
+coverage, otherwise label the evidence partial.
+
+For supplied exact message URLs, batch every supported exact entity path in
+one `fetch`, then synthesize locally. Use `/teams/{teamId}/channels/{channelId}/messages/{messageId}`
+for channel messages and `/chats/{chatId}/messages/{messageId}` for chat messages;
+do not swap surfaces, guess IDs from ambiguous links or search broader history.
+Inspect every result and preserve successes; unresolved targets remain explicit.
+
+For API inventories, use `search_paths` with `{"query":"/chats"}` or
+`{"query":"/teams/{team-id}/channels"}` as requested. Report every confirmed
+operation/category, state unconfirmed categories and inspect saved capped output
+when available. No extra path/schema call merely to fill an unsupported category.
 
 ## Presence
 

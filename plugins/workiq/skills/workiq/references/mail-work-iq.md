@@ -5,21 +5,21 @@ drafting/sending/replying/forwarding, marking read, copying/moving, and deleting
 for synthesis questions ("summarize the deadline thread with John"), not for finding,
 listing, or mutating individual messages.
 
-## Bounded fallback when mail synthesis `ask` fails
+## Semantic and exact exchange boundaries
 
-For a mail synthesis question scoped to a specific person and topic, call `ask` exactly once.
-If that call explicitly fails or reports that it cannot complete, make exactly one focused
-`fetch` to `/me/messages?$search=%22{mostSpecificTopicPhrase}%22&$select=id,subject,from,receivedDateTime,body,bodyPreview&$top=10`.
-Filter the returned messages locally to the requested person and summarize only that evidence.
-Do not retry `ask`, search Teams or chats, call `search_paths`, broaden the topic phrase, follow
-conversations, or make additional mail fetches. If the bounded fallback does not contain enough
-evidence, report the limitation.
+Public semantic mail questions start with `ask`; a failure/timeout does not
+automatically authorize fan-out, an entity sweep or denial bypass. Follow
+[diagnostic-driven recovery](troubleshooting.md). A concrete missing in-scope fact
+can use a bounded supported refinement/exact read; no automatic broader search.
 
-For a synthesis question about themes in unread Inbox mail, call `ask` exactly once. If it
-explicitly fails or reports that it cannot complete, make exactly one bounded `fetch` to
-`/me/mailFolders/inbox/messages?$filter=isRead%20eq%20false&$select=subject,from,receivedDateTime,bodyPreview&$top=50`
-and derive themes locally from that page. Do not use `$skip`, follow `@odata.nextLink`, fetch a
-second page, or make another tool call. State that the summary covers the bounded page.
+For an exact supplied or named exchange, use structured reads and local synthesis.
+Select `id,subject,conversationId,from,toRecipients,ccRecipients,receivedDateTime,sentDateTime,body,bodyPreview,isDraft`.
+Verify subject, participants, time and conversation. Exclude `isDraft:true` from
+exchanged history, order sent messages by their actual timestamps, and quote
+actual bodies rather than previews. The latest non-draft match is a reply target,
+not necessarily the whole thread. Follow supported pages and relevant conversation
+reads for requested complete history, or disclose missing coverage. Never invent
+owners, decisions, dates or an ordering unsupported by returned evidence.
 
 ## Mail delta: use `/me/mailFolders/{id}/messages/delta` (folder-scoped)
 
@@ -79,6 +79,12 @@ folder names are exact-match by design. Use it for `rename` / `move` / `delete` 
 
 ## "Draft" vs "send" — pick the right verb
 
+Establish intent first: locating existing replies, suggested wording, persisting
+a draft and sending are different effects. A noun phrase such as "reply emails
+last week" remains read-only pending clarification. A failed `createReply` does
+not authorize a fresh message substitute, `createReplyAll` or sending. An absent
+user is not approval. Obtain required exact action/target/content confirmation.
+
 When the user asks for a draft to **exist** (not just suggested wording), persist it
 without sending:
 
@@ -97,15 +103,17 @@ use those endpoints when the user asked for a draft.
 
 ## Resolve-then-act (do not loop)
 
-An exact-thread request that combines a summary with creation of a reply draft is a strict
-exception to the fallback below: use one exact-subject `fetch`, then
-`/me/messages/{id}/createReply`. This direct route takes precedence over the general rule to use
-`ask` for synthesis. If the exact fetch fails or finds no match, stop and report that failure;
-do not call `ask`, inspect schemas, run discovery, or switch to `createReplyAll`.
+For an exact-thread summary plus requested persisted reply, begin with
+`/me/messages?$search=%22{urlEncodedExactSubject}%22&$select=id,subject,conversationId,from,toRecipients,ccRecipients,receivedDateTime,sentDateTime,body,bodyPreview,isDraft&$top=5`.
+Select the latest non-draft exact target and read relevant exchanged history
+above. After preparation and confirmation, call `do_action`
+`/me/messages/{messageId}/createReply` with
+`{"Comment":"{requestedMarkerAndGroundedReplyBody}"}`. Do not send.
 
-1. Resolve the message with **one** `fetch` (filter by `$search` for subject, or by `id`).
-2. If the first fetch misses, try **one** `ask` to locate it semantically.
-3. If still not found, **stop and report "not found"** — do not fire 10+ more
-   `fetch`/`search_paths`/`ask` calls.
-4. Once you have the id, call the mutation directly. Finding the message is not the goal;
-   performing the requested action is.
+This known body needs no `get_schema` preflight. Use the returned ID verbatim,
+including trailing `=`; no proactive/double encoding or formatting retries.
+One resolve and one act is the happy path, not a ban on disambiguation, supported
+paging, complete history or necessary draft editing. Permit at most one bounded
+structured refinement for an unresolved exact target, not an `ask` resolver;
+if still missing, report not found in searched scope. Apply central non-replay
+and denial rules rather than substituting a different action.

@@ -47,9 +47,9 @@ server-side.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `query` | string[] | Yes | One or more natural-language queries. At least one non-empty, non-whitespace string is required. Each string runs as a separate retrieval query. Prefer one focused query; batch only distinct evidence needs. |
+| `query` | string | Yes | One focused natural-language query. A nonempty, non-whitespace string is required; do not send an array or batch queries in this field. |
 | `strategy` | string | API: no; skill: always explicit | `grounding` is the skill default. The API's omitted-parameter default remains `copilot`. Send one accepted value explicitly; other values are rejected. |
-| `capabilities` | object[] | No | Source allow-list: objects such as `{"name":"Email"}`, not bare strings. The skill default is to omit this field when source families are unspecified. Omission or `[]` retains all sources available to the selected agent/strategy. Restrict only for an explicit source requirement or a concrete justified source need. |
+| `capabilities` | object[] | No | Source allow-list: objects such as `{"name":"Email"}`, not bare strings; use only advertised capability-specific scope fields. Cannot be combined with a non-default agent ID. Omit when source families are unspecified; omission or `[]` retains the selected agent/strategy's available sources. Restrict only for an explicit source requirement or concrete justified source need. |
 | `agentId` | string | No | Target a specific agent. Defaults to `bizchat-as-gpt-scenario`; omit unless a specific agent is needed and its ID is known. |
 | `includeDeveloperCard` | boolean | No | Defaults to `false`. Requests orchestration diagnostics (agent metadata, tool invocation details, retrieval summary); enable only for troubleshooting. |
 
@@ -104,7 +104,7 @@ request valid.
 
 ```json
 {
-  "query": ["Requirements, design decisions, and open questions for Project X implementation"],
+  "query": "Requirements, design decisions, and open questions for Project X implementation",
   "strategy": "grounding"
 }
 ```
@@ -113,7 +113,7 @@ request valid.
 
 ```json
 {
-  "query": ["Project X rollout requirements discussed in SharePoint, email, and Teams this week"],
+  "query": "Project X rollout requirements discussed in SharePoint, email, and Teams this week",
   "strategy": "grounding",
   "capabilities": [
     {"name": "OneDriveAndSharePoint"},
@@ -127,7 +127,7 @@ request valid.
 
 ```json
 {
-  "query": ["Project X customer escalations in connected enterprise sources"],
+  "query": "Project X customer escalations in connected enterprise sources",
   "strategy": "copilot",
   "capabilities": [{"name": "GraphConnectors"}]
 }
@@ -140,6 +140,13 @@ Do not narrow to a capability unless it matches the user's requested scope.
 
 A retrieval objective is one bounded evidence goal, including its repairs.
 Check requested identity, source types, time range, and required facts first:
+
+For artifact finding and each side of a comparison, verify the full requested
+name/identity, type, location/time and relevant content. Ranking and semantic
+similarity do not make a near-match exact. If a source remains unresolved, name
+that gap rather than silently substituting. A snippet can suffice when it
+supports the requested precision; otherwise use one supported in-scope refinement
+or exact read, not an unconditional download or recursive sweep.
 
 | Observed outcome | Next step |
 | --- | --- |
@@ -198,3 +205,6 @@ host always wraps it identically or that every hit has every metadata field.
   reconstruct opaque entity IDs from citation URLs.
 - Do not call `ask` automatically after successful retrieval: synthesize from
   the evidence yourself. Call another tool only for a concrete unmet need.
+- Before synthesis verify referents, requested facts, comparator and source
+  coverage. Distinguish absent, not retrieved, outside scope and deliberately
+  excluded; never invent prior attendees, dates, or full content from snippets.

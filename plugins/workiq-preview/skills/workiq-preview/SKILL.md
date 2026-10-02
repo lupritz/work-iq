@@ -13,6 +13,10 @@ Tools use WorkIQ entity paths, not arbitrary Microsoft Graph URLs.
 This policy is agent-host-neutral; use the current host's tool catalog, skill
 loading, confirmation, and result-handling mechanisms.
 
+Follow the WorkIQ configuration selected by the host or user; another installed
+M365 skill does not override it. Public ask-first policy does not change this
+package's retrieve-first policy.
+
 **Resolve tool names first.** These are logical names. Discover the exact names
 and live schemas in the connected `workiq-preview` MCP catalog; load deferred definitions
 before calling. Never guess aliases or derive prefixes from a skill folder.
@@ -26,6 +30,7 @@ before calling. Never guess aliases or derive prefixes from a skill folder.
 | User explicitly asks Copilot for its answer | Direct `ask`; no retrieval or agent-discovery preflight |
 | User explicitly asks a particular agent | Reuse its trusted ID, or discover with `list_agents`, then `ask` with the exact `agentId` |
 | Fetch a known list, apply a filter, or read exact entities | `fetch` |
+| Library columns or filter/count/group/sort files by metadata | `fetch` list-item `fields`; [file metadata](references/files-work-iq.md#sharepoint-library-columns), never semantic evidence alone |
 | Create a new entity in a collection (event, fresh draft, task) | `create_entity` |
 | Update fields / delete an existing entity | `update_entity` / `delete_entity` |
 | Execute an action (send, reply, createReply, forward, accept, decline) | `do_action` |
@@ -46,7 +51,7 @@ An explicit request to inspect a path or schema still requires that discovery.
 **Retrieve context; ask an agent.** Ordinary questions, summaries, comparisons,
 catch-up, and implementation-context requests are caller-owned evidence tasks,
 not implied delegation. Read [retrieve guidance](references/retrieve-work-iq.md)
-before first use; `query` is a nonempty string array with a nonblank query.
+before first use; `query` is a single nonblank string, not an array.
 
 | Source requirement | Explicit strategy |
 | --- | --- |
@@ -90,7 +95,7 @@ for exact IDs, attribution, and same-agent `conversationId` continuation.
 | --- | --- | --- |
 | Mail | `/me/messages`, `/me/mailFolders` | list/get/fresh draft/update/delete; send via `/me/sendMail`; message actions via `/me/messages/{id}/{action}` |
 | Calendar | `/me/events`, `/me/calendarView` | `fetch` events or a bounded calendar window; create/update/delete events; RSVP via event actions |
-| Teams chats | `/me/chats`, `/chats/{chatId}/messages` | list/send; chats and channels are distinct surfaces |
+| Teams chats | `/me/chats`, `/chats/{chatId}/messages` | exact topic/person resolution, list/send/edit/hide/read state; chat creation is a mutation, never a read-only lookup |
 | Teams channels | `/me/joinedTeams`, `/teams/{teamId}/channels/{channelId}/messages` | list/post/reply/react |
 | People | `/me`, `/users/{id}`, `/me/manager`, `/me/contacts` | profile, org chart, personal contacts; directory and contact IDs are not interchangeable |
 | Files | `/me/drive`, `/drives/{id}`, `/sites/{id}` | metadata via entity tools; bytes via `fetch_blob`; named OneDrive search via `call_function` |
@@ -98,6 +103,12 @@ for exact IDs, attribution, and same-agent `conversationId` continuation.
 | Change tracking | `/me/mailFolders/inbox/messages/delta`, `/me/calendarView/delta`, `/me/contacts/delta` | `call_function` only, never `fetch` |
 
 ## Required Workflow Order
+
+**Intent before resolve-then-act.** Finding existing content, suggested wording,
+a persisted draft and sending are different effects. A noun phrase containing
+"reply", "message", "draft" or a date range does not authorize a write. If the
+effect is ambiguous, remain read-only and clarify. No user present is not
+approval; resolving a target is not permission to act.
 
 1. **Resolve and prepare.** Find exact IDs with structured tools; for named OneDrive files, use the [file contract](references/files-work-iq.md). Never use semantic-only mutation IDs. If ambiguous, show bounded candidates and ask the user to choose.
 2. **Schema before unfamiliar writes.** Use `get_schema` with the matching `operationType` (`create`, `update`, or `action`) when the body is unknown. Action schemas describe the request body, not the resulting entity. For known paths and bodies, go direct.
@@ -142,9 +153,28 @@ history, preserve conversation/participants, quote actual bodies, and qualify ga
 `createReply` creates an unsent reply draft; `/reply` sends. Never substitute
 inline wording or a new message for a requested persisted reply.
 
+## Exact Sources and Pre-answer Evidence Check
+
+For read-only artifact finding and comparisons, verify each requested source:
+full name/identity, source type, location and time constraints, and relevant
+content. A plausible near-match is not the requested artifact. Resolve comparison
+targets independently; never silently substitute a different file.
+
+For a concrete unresolved fact, make a bounded supported in-scope refinement or
+exact content read if returned evidence is insufficient. This is not an
+always-download rule, recursive enumeration, or permission to bypass denial.
+Report missing targets and searched scope, not tenant-wide absence.
+
+Before synthesis check actual targets/referents, required facts, comparator scope
+and evidence coverage. Distinguish absent, not retrieved, outside scope and
+deliberately excluded. Do not invent context such as "these attendees" or "that week",
+infer full content from a truncated snippet, or present generic advice as
+organizational fact. Preserve citations and uncertainty. Sufficient evidence
+needs neither a longer answer nor more calls.
+
 ## Efficiency and Error Handling
 
-- Include only needed fields with `$select` and bound collections with `$top` **where supported**. Do not add unsupported options: channel-member listing does not take `$top`, and some documented reads deliberately omit `$select`.
+- Include only needed fields with `$select` and bound collections with `$top` **where supported**. Teams joinedTeams/message reads omit `$top`; chat-member reads use no query string and channel members do not take `$top` or select `email`/`userId`. Read the Teams contract for marker/URL reads and exact identity.
 - Use one resolve and one act when possible. Call budgets describe an authorized, unambiguous happy path; they never override confirmation, disambiguation, supported paging, or honest partial results. If one or two focused lookups miss, report the searched scope rather than looping.
 - Honor `@odata.nextLink`: for all/every/complete requests, continue supported paging or explicitly report partial results. Do not invent `$skip` cursors.
 - Never retry a write whose outcome is ambiguous as though it definitely failed. Report actual outcomes; claim completion only when the response confirms it.

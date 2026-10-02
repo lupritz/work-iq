@@ -14,7 +14,7 @@ Domain references own their endpoint recipes.
 | Exact file metadata, folders, rename/move/copy/delete, or upload session | [Files](files-work-iq.md) |
 | Calendar windows, event actions, rescheduling, reminders, next meeting, or free/busy | [Calendar](calendar-work-iq.md) |
 | Mail filters, exact exchange summary, persisted reply draft, send/forward/delete, or attachment selection | [Mail](mail-work-iq.md) |
-| Chats, channel members/messages, exact message summaries, reactions, or presence | [Teams](teams-work-iq.md) |
+| Exact chat topics/people, marker or supplied message URLs, channel members, sends/replies/edits, hide/read state, literal reactions or presence | [Teams](teams-work-iq.md); retain exact identities, supported paging and mutation confirmation |
 | Structured plan discovery and Planner tasks | [Tasks](tasks-work-iq.md) |
 | OneDrive/SharePoint or attachment bytes | [Binary download](fetch-blob-work-iq.md) |
 | Explicit structured delta/change synchronization | [Functions and checkpoints](call-function-work-iq.md) |
@@ -105,6 +105,10 @@ switching after access/policy denial. All writes follow
 [operation-aware recovery and completion](troubleshooting.md).
 
 ## Cross-domain sequencing and safety
+
+Apply the entrypoint's intent gate before resolve-then-act: locating existing
+replies, suggested wording, persisted drafts and sends are different effects.
+Ambiguous noun phrases remain read-only pending clarification.
 
 1. Identify requested evidence, exact entities, and effects separately. For
    supplied Mail/Calendar/Teams URLs, batch supported exact reads with `fetch`
