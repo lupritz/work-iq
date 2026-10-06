@@ -29,6 +29,15 @@ registrations. Do not substitute another MCP server or invent REST paths.
    path with the matching operation type. Schema availability does not grant
    authorization.
 
+Construct the one discovery query from the business domain, requested workflow
+or judgment, and expected decision, evidence distinction, or output. Do not
+reduce it to record names, product names, table nouns, or backend schema terms.
+For example, prefer `sales stage advance readiness criteria met unmet unknown`
+over `opportunity business process flow stage requirements`, and prefer
+`sales post meeting follow up facts decisions commitments open topics next
+actions` over `opportunity`. Do not guess a skill name that the user or
+discovery results did not establish.
+
 Discovery is read-only: use `search_paths`, not `do_action` on
 `/businessapps/me`. `do_action` remains appropriate for a discovered
 environment SQL query, Custom API, app operation, in-app MCP tool, or delegated

@@ -19,18 +19,6 @@ enabled providers, but only returned paths prove that a provider participated.
 For Business Applications, require a returned `/businessapps/...` path before
 following it.
 
-## Business Applications query construction
-
-Business Applications discovery searches indexed metadata such as skills,
-tables, apps, APIs, and operations, not the contents of business records. Use
-returned paths to fetch or query the underlying data afterward.
-
-For a workflow-oriented request, preserve business intent instead of reducing
-the query to record names, product names, table nouns, or backend schema terms.
-Include the business domain, requested workflow or judgment, and expected
-decision, evidence distinction, or output. Do not guess a skill name that the
-user or discovery results did not establish.
-
 ## Workflow
 
 1. Make one focused `search_paths` call with an accepted `filter` or `query`
@@ -98,17 +86,6 @@ or:
 ```json
 { "query": "qualify a lead" }
 ```
-
-For a procedure-oriented request, preserve the discriminating intent:
-
-```json
-{ "query": "sales stage advance readiness criteria met unmet unknown" }
-```
-
-Prefer that over a schema-oriented query such as
-`opportunity business process flow stage requirements`. Similarly, prefer
-`sales post meeting follow up facts decisions commitments open topics next
-actions` over `opportunity`.
 
 For known structural inventory, skip discovery and use the exact read path. For example, list Business Applications
 environments with `fetch` on `/businessapps/environments/`.

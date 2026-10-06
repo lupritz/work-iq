@@ -15,23 +15,6 @@ enabled providers, but only returned paths prove participation. Require a
 returned `/businessapps/...` path before following a Business Applications
 result.
 
-## Business Applications query construction
-
-Business Applications discovery searches indexed metadata such as skills,
-tables, apps, APIs, and operations, not the contents of business records. Use
-returned paths to fetch or query the underlying data afterward.
-
-For a workflow-oriented request, preserve business intent instead of reducing
-the query to record names, product names, table nouns, or backend schema terms.
-Include the business domain, requested workflow or judgment, and expected
-decision, evidence distinction, or output. Do not guess a skill name that the
-user or discovery results did not establish.
-
-For example, prefer `sales stage advance readiness criteria met unmet unknown`
-over `opportunity business process flow stage requirements`, and prefer
-`sales post meeting follow up facts decisions commitments open topics next
-actions` over `opportunity`.
-
 ## Workflow
 
 1. Make one focused discovery call for the requested resource and operation.
