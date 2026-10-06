@@ -21,10 +21,14 @@ registrations. Do not substitute another MCP server or invent REST paths.
    environment, and inspect only its relevant returned collection. Abstain when
    the exact environment or capability is absent.
 4. Follow exact returned paths with `fetch`, `get_schema`, or the effect-correct
-   write/action tool. When a procedure-oriented request returns a matching
-   `/skills/` path, fetch the best-matching skill before querying records or
-   invoking operations. The skill provides procedure guidance; it does not read
-   data or execute an action. Do not guess path segments, IDs, names, or casing.
+   write/action tool. When a request needs workflow judgment, policy or safety
+   handling, a recommendation, triage, prerequisites, or next-step sequencing
+   and discovery returns a matching `/skills/` path, the next call must fetch
+   that exact skill. Read it before `get_schema`, record queries, or operations,
+   even when discovery also returned a tool, table, or API path. Do not
+   substitute inspection of an operation schema for the returned procedure
+   guidance. The skill provides procedure guidance; it does not read data or
+   execute an action. Do not guess path segments, IDs, names, or casing.
 5. Before an unfamiliar write or action, call `get_schema` on the concrete
    path with the matching operation type. Schema availability does not grant
    authorization.
