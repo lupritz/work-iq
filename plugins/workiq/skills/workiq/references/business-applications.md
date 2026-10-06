@@ -21,11 +21,9 @@ substitute a separate endpoint, another MCP server, or an invented REST URL.
 5. For an unknown path or identifier, discover the Business Applications resource this way — apps, tables, records,
    skills, APIs, and operations. Take each identifier from the returned paths. Do not guess an ID or name. Known
    structural inventory is the exception: use its direct `fetch` path, especially `/businessapps/environments/`.
-   When a request needs workflow judgment, policy or safety handling, a recommendation, triage, prerequisites,
-   or next-step sequencing and discovery returns a matching `/skills/` path, the next call must fetch that exact
-   skill. Read it before `get_schema`, record queries, or operations, even when discovery also returned a tool,
-   table, or API path. Do not substitute inspection of an operation schema for the returned procedure guidance.
-   The skill provides procedure guidance; it does not read data or execute an action.
+   When a procedure-oriented request returns a matching `/skills/` path, fetch the best-matching skill before
+   querying records or invoking operations. The skill provides procedure guidance; it does not read data or
+   execute an action.
 6. Use `get_schema` on the returned concrete path before an unfamiliar mutation or operation. Never fill in
    `{environmentId}`, `{tableName}`, `{recordId}`, `{appName}`, `{apiName}`, `{skillName}`, or operation names
    from memory.
