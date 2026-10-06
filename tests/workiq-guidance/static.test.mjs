@@ -113,6 +113,12 @@ test('Business Applications discovery and inventory contracts stay aligned', () 
     assert.match(business, /write receipt[\s\S]{0,100}read-back/i);
     assert.match(business, /pre-existing lookalike[\s\S]{0,40}not proof/i);
     assert.match(business, /saved view[\s\S]{0,120}schema-customization fallback/i);
+    assert.match(business, /business domain[\s\S]{0,180}workflow or judgment[\s\S]{0,180}(?:decision|evidence distinction|output)/i);
+    assert.match(business, /instead of reducing the query|instead of reducing the query to|instead of reducing the query to record/i);
+    assert.match(business, /stage\s+advance\s+readiness\s+criteria\s+met\s+unmet\s+unknown/i);
+    assert.match(business, /post\s+meeting\s+follow\s+up\s+facts\s+decisions\s+commitments\s+open\s+topics\s+next\s+actions/i);
+    assert.match(business, /matching\s+`?\/skills\/`?\s+path[\s\S]{0,180}(?:prefer|fetch)[\s\S]{0,180}before\s+querying\s+records/i);
+    assert.match(business, /fetched\s+skill[\s\S]{0,100}(?:procedure[\s\S]{0,20}guidance|does not[\s\S]{0,20}read data)/i);
     assert.doesNotMatch(business, /\/applications\//i);
     assert.match(search, /no `backend`, `source`, or `provider` argument/i);
     check(exampleProblems(search));

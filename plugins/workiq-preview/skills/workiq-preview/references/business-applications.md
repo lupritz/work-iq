@@ -34,6 +34,28 @@ exposed; use `search_paths` instead. The old route is POST-shaped and can be
 policy-denied before any grounded path is returned, ending the workflow before
 `search_paths` or `fetch` can run.
 
+## Discovery query construction and skill selection
+
+`search_paths` ranks query words against resource names and descriptions.
+Preserve business intent instead of reducing the query to record names, product
+names, table nouns, or backend schema terms. For a workflow-oriented request,
+include the business domain, requested workflow or judgment, and expected
+decision, evidence distinction, or output.
+
+For example, prefer `sales stage advance readiness criteria met unmet unknown`
+over `opportunity business process flow stage requirements`, and prefer
+`sales post meeting follow up facts decisions commitments open topics next
+actions` over `opportunity`. Do not guess a skill name that the user or
+discovery results did not establish.
+
+When the request asks for a domain review, assessment, prioritization, plan,
+readiness decision, draft, or other procedure and discovery returns a matching
+`/skills/` path, prefer it over generic table paths and `fetch` the
+best-matching skill before querying records or invoking operations. A fetched
+skill provides procedure guidance; it does not read data or execute an action.
+If no matching skill is returned, follow the normal grounded-resource workflow
+without repeating or broadening discovery.
+
 ## Exact tool and path selection
 
 | Intent | Tool and path |
