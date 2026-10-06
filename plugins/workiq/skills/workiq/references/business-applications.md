@@ -8,7 +8,8 @@ substitute a separate endpoint, another MCP server, or an invented REST URL.
 
 1. Start intent-driven discovery with one focused `search_paths` call and a natural-language description of the
    business record, workflow, app, or operation. Use only fields accepted by the connected WorkIQ tool schema.
-   Treat discovery as grounded only when the response contains a `/businessapps/...` path.
+   Treat discovery as grounded only when the response contains a `/businessapps/...` path. This searches indexed
+   metadata such as skills, tables, apps, APIs, and operations, not business-record contents.
 2. Use `fetch` on `/businessapps/environments/` when the user explicitly asks to list environments or identify the
    default environment. Do not guess an environment ID.
 3. If `search_paths` errors or returns no `/businessapps/...` path, do not repeat or broaden the search. Use the
@@ -20,6 +21,9 @@ substitute a separate endpoint, another MCP server, or an invented REST URL.
 5. For an unknown path or identifier, discover the Business Applications resource this way — apps, tables, records,
    skills, APIs, and operations. Take each identifier from the returned paths. Do not guess an ID or name. Known
    structural inventory is the exception: use its direct `fetch` path, especially `/businessapps/environments/`.
+   When a procedure-oriented request returns a matching `/skills/` path, fetch the best-matching skill before
+   querying records or invoking operations. The skill provides procedure guidance; it does not read data or
+   execute an action.
 6. Use `get_schema` on the returned concrete path before an unfamiliar mutation or operation. Never fill in
    `{environmentId}`, `{tableName}`, `{recordId}`, `{appName}`, `{apiName}`, `{skillName}`, or operation names
    from memory.
@@ -28,28 +32,6 @@ Do not use `do_action` on `/businessapps/me` for discovery even if that route is
 exposed; use `search_paths` instead. The old route is POST-shaped and can be
 policy-denied before any grounded path is returned, ending the workflow before
 `search_paths` or `fetch` can run.
-
-## Discovery query construction and skill selection
-
-`search_paths` ranks the words in the query against resource names and descriptions. Preserve the user's
-business intent instead of reducing the query to record names, product names, table nouns, or backend schema
-terms. For a workflow-oriented request, include:
-
-- the business domain;
-- the workflow or judgment being requested; and
-- the expected decision, evidence distinction, or output.
-
-For example, prefer `sales stage advance readiness criteria met unmet unknown` over
-`opportunity business process flow stage requirements`, and prefer
-`sales post meeting follow up facts decisions commitments open topics next actions` over `opportunity`.
-Do not guess or insert a skill name that the user or discovery results did not establish.
-
-When the request asks for a domain review, assessment, prioritization, plan, readiness decision, draft, or other
-procedure and discovery returns a matching `/skills/` path, prefer that path over generic table paths and `fetch`
-the best-matching skill before querying records or invoking operations. A fetched skill provides procedure
-guidance; it does not itself read data or execute an action. Continue with the exact returned data or operation
-paths needed to complete the request. If no matching skill path is returned, follow the normal grounded-resource
-workflow without repeating or broadening discovery.
 
 ## Exact path and tool selection
 
