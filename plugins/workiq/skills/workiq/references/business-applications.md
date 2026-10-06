@@ -31,18 +31,18 @@ substitute a separate endpoint, another MCP server, or an invented REST URL.
 Construct the one discovery query from the business domain, requested workflow
 or judgment, and expected decision, evidence distinction, or output. Do not
 reduce it to record names, product names, table nouns, or backend schema terms.
-`search_paths` ranks lexical overlap with indexed metadata; it does not infer a
-missing workflow from a generic entity noun. More words are not automatically
-better: use a small set of discriminating terms that distinguish the intended
-procedure and output from generic data resources.
+`search_paths` ranks lexical overlap with indexed metadata text; it cannot
+recover workflow or output intent omitted from the query. More words are not
+automatically better: preserve a small set of discriminating terms from the
+user's request, and do not invent domain terminology or a skill name.
 
-For example, prefer `sales stage advance readiness criteria met unmet unknown`
-over `opportunity business process flow stage requirements`: readiness and
-met/unmet/unknown distinguish an assessment procedure from generic process-flow
-metadata. Prefer `sales post meeting follow up facts decisions commitments open
-topics next actions` over `opportunity`: the workflow and output terms
-distinguish a follow-up procedure from opportunity-table metadata. Do not guess
-a skill name that the user or discovery results did not establish.
+For a request to review whether an item is ready to advance and separate
+satisfied, missing, and unknown criteria, prefer
+`readiness review advance satisfied missing unknown criteria` over
+`record process stage fields`. The first query preserves the requested workflow
+and output; the second keeps only generic schema concepts. For a request to
+prepare follow-up with decisions, commitments, open questions, and next actions,
+keep those terms rather than searching only for the record or table name.
 
 Do not use `do_action` on `/businessapps/me` for discovery even if that route is
 exposed; use `search_paths` instead. The old route is POST-shaped and can be
